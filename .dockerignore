@@ -34,5 +34,14 @@ docs/
 screenshots/
 README.md
 
+# 后端（前端镜像不需要）
+backend/
+
+# 数据库文件
+data/
+*.db
+*.db-shm
+*.db-wal
+
 # 锁文件（使用 npm ci 时不需要）
 # package-lock.json  # 保留，npm ci 需要

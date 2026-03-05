@@ -76,6 +76,12 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 export const useSettingsStore = defineStore('settings', () => {
   const settings = ref<AppSettings>(structuredClone(DEFAULT_SETTINGS))
+  // 同步版本号（乐观锁）和脏标记
+  const syncVersion = ref(0)
+  const dirty = ref(false)
+
+  // 首次加载后允许跟踪变更
+  let trackChanges = false
 
   function updateCSSVars() {
     const s = settings.value
@@ -101,13 +107,37 @@ export const useSettingsStore = defineStore('settings', () => {
 
   function resetSettings() {
     settings.value = structuredClone(DEFAULT_SETTINGS)
+    dirty.value = false
   }
 
-  watch(settings, updateCSSVars, { deep: true, immediate: true })
+  // 应用从服务端拉取的设置（不触发脏标记）
+  function applyRemoteSettings(data: Record<string, unknown>, version: number) {
+    trackChanges = false
+    Object.assign(settings.value, data as Partial<AppSettings>)
+    syncVersion.value = version
+    dirty.value = false
+    setTimeout(() => { trackChanges = true }, 0)
+  }
 
-  return { settings, updateCSSVars, resetSettings }
+  function clearDirty() {
+    dirty.value = false
+  }
+
+  // CSS 变量同步 + 脏标记
+  watch(settings, (_, oldVal) => {
+    updateCSSVars()
+    if (trackChanges && oldVal !== undefined) {
+      dirty.value = true
+    }
+  }, { deep: true, immediate: true })
+
+  // 初始化后才开始跟踪
+  setTimeout(() => { trackChanges = true }, 100)
+
+  return { settings, syncVersion, dirty, updateCSSVars, resetSettings, applyRemoteSettings, clearDirty }
 }, {
   persist: {
     key: 'aitabs-settings',
+    pick: ['settings', 'syncVersion'],
   },
 })

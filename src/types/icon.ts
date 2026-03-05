@@ -13,6 +13,10 @@ export interface SiteIcon {
   groupId: string
   children?: SiteIcon[]
   openInNewTab?: boolean
+  // 同步元数据
+  updatedAt?: number
+  deletedAt?: number | null
+  dirty?: boolean
 }
 
 export interface SiteInfoResponse {

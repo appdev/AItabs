@@ -16,6 +16,10 @@ export interface Widget {
   order: number
   groupId: string
   config: Record<string, any>
+  // 同步元数据
+  updatedAt?: number
+  deletedAt?: number | null
+  dirty?: boolean
 }
 
 export interface WidgetMeta {

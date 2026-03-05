@@ -9,6 +9,8 @@ import { useWidgetsStore } from '@/stores/widgets'
 import { PRESET_COLORS } from '@/utils/color'
 import { db } from '@/services/db'
 import { applyWallpaper } from '@/composables/useWallpaper'
+import { useAuth } from '@/composables/useAuth'
+import { push, pull, fullSync, connectSSE, disconnectSSE, syncing, lastSyncTime } from '@/services/syncManager'
 
 defineProps<{ visible: boolean }>()
 const emit = defineEmits<{ 'update:visible': [val: boolean] }>()
@@ -17,6 +19,7 @@ const settingsStore = useSettingsStore()
 const groupsStore = useGroupsStore()
 const iconsStore = useIconsStore()
 const widgetsStore = useWidgetsStore()
+const { username, isLoggedIn, login, register, logout } = useAuth()
 
 // 直接取响应式对象，修改后自动触发 CSS 更新和持久化
 const settings = settingsStore.settings
@@ -29,10 +32,87 @@ const MENUS = [
   { key: 'time',      label: '时间/日期', icon: 'mdi:clock-outline' },
   { key: 'wallpaper', label: '主题/壁纸', icon: 'mdi:palette-outline' },
   { key: 'layout',    label: '布局',      icon: 'mdi:view-dashboard-outline' },
+  { key: 'account',   label: '账号同步',  icon: 'mdi:account-sync-outline' },
   { key: 'backup',    label: '备份恢复',  icon: 'mdi:cloud-sync-outline' },
   { key: 'reset',     label: '重置设置',  icon: 'mdi:refresh' },
   { key: 'about',     label: '关于',      icon: 'mdi:information-outline' },
 ]
+
+// 账号面板表单状态
+const authForm = ref({ username: '', password: '' })
+const authError = ref('')
+const authLoading = ref(false)
+
+async function handleLogin() {
+  if (!authForm.value.username || !authForm.value.password) {
+    authError.value = '请填写用户名和密码'
+    return
+  }
+  authLoading.value = true
+  authError.value = ''
+  try {
+    await login(authForm.value.username, authForm.value.password)
+    authForm.value = { username: '', password: '' }
+    connectSSE()
+    await fullSync()
+    ElMessage.success('登录成功')
+  } catch (err: any) {
+    authError.value = err?.data?.error ?? '登录失败，请检查用户名和密码'
+  } finally {
+    authLoading.value = false
+  }
+}
+
+async function handleRegister() {
+  if (!authForm.value.username || !authForm.value.password) {
+    authError.value = '请填写用户名和密码'
+    return
+  }
+  authLoading.value = true
+  authError.value = ''
+  try {
+    await register(authForm.value.username, authForm.value.password)
+    authForm.value = { username: '', password: '' }
+    connectSSE()
+    await fullSync()
+    ElMessage.success('注册成功')
+  } catch (err: any) {
+    authError.value = err?.data?.error ?? '注册失败，用户名可能已存在'
+  } finally {
+    authLoading.value = false
+  }
+}
+
+async function handlePull() {
+  try {
+    await pull()
+    ElMessage.success('同步完成')
+  } catch {
+    ElMessage.error('同步失败，请检查网络')
+  }
+}
+
+async function handlePush() {
+  try {
+    await push()
+    ElMessage.success('备份完成')
+  } catch {
+    ElMessage.error('备份失败，请检查网络')
+  }
+}
+
+function handleLogout() {
+  disconnectSSE()
+  logout()
+  ElMessage.success('已退出登录')
+}
+
+// 格式化上次同步时间
+function formatSyncTime(ts: number): string {
+  if (!ts) return '从未同步'
+  const d = new Date(ts)
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
 
 // 搜索引擎管理
 const newEngineName = ref('')
@@ -465,6 +545,88 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
                 <span>显示一言</span>
                 <ElSwitch v-model="settings.layout.yiyan" size="small" />
               </div>
+            </template>
+
+            <!-- ===== 账号同步面板 ===== -->
+            <template v-else-if="activeMenu === 'account'">
+
+              <!-- 未登录 -->
+              <template v-if="!isLoggedIn">
+                <p class="text-gray-400 text-xs mb-4 leading-relaxed">
+                  登录账号后，数据将自动在多设备间同步。
+                </p>
+                <div class="space-y-2">
+                  <ElInput
+                    v-model="authForm.username"
+                    placeholder="用户名（3-20 位字母数字下划线）"
+                    size="small"
+                    clearable
+                    @keyup.enter="handleLogin"
+                  />
+                  <ElInput
+                    v-model="authForm.password"
+                    placeholder="密码（6-50 位）"
+                    type="password"
+                    size="small"
+                    show-password
+                    @keyup.enter="handleLogin"
+                  />
+                  <p v-if="authError" class="text-red-400 text-[11px]">{{ authError }}</p>
+                  <div class="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      class="s-action-btn flex-1 justify-center"
+                      :disabled="authLoading"
+                      @click="handleLogin"
+                    >
+                      <Icon v-if="authLoading" icon="mdi:loading" class="w-4 h-4 animate-spin" />
+                      <Icon v-else icon="mdi:login" class="w-4 h-4" />
+                      登录
+                    </button>
+                    <button
+                      type="button"
+                      class="s-action-btn flex-1 justify-center"
+                      :disabled="authLoading"
+                      @click="handleRegister"
+                    >
+                      <Icon icon="mdi:account-plus-outline" class="w-4 h-4" />
+                      注册
+                    </button>
+                  </div>
+                </div>
+              </template>
+
+              <!-- 已登录 -->
+              <template v-else>
+                <div class="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3 mb-4">
+                  <div class="flex items-center gap-2">
+                    <Icon icon="mdi:account-circle-outline" class="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    <div>
+                      <p class="text-gray-700 text-xs font-medium">已登录：{{ username }}</p>
+                      <p class="text-gray-400 text-[10px] mt-0.5">上次同步：{{ formatSyncTime(lastSyncTime) }}</p>
+                    </div>
+                    <div v-if="syncing" class="ml-auto">
+                      <Icon icon="mdi:loading" class="w-4 h-4 text-blue-400 animate-spin" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <button type="button" class="s-action-btn w-full justify-start" @click="handlePull">
+                    <Icon icon="mdi:cloud-download-outline" class="w-4 h-4" />
+                    同步到本地
+                  </button>
+                  <button type="button" class="s-action-btn w-full justify-start" @click="handlePush">
+                    <Icon icon="mdi:cloud-upload-outline" class="w-4 h-4" />
+                    立即备份
+                  </button>
+                  <button type="button" class="s-action-btn w-full justify-start danger" @click="handleLogout">
+                    <Icon icon="mdi:logout" class="w-4 h-4" />
+                    退出登录
+                  </button>
+                </div>
+              </template>
+
             </template>
 
             <!-- ===== 备份恢复面板 ===== -->

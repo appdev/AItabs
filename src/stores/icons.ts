@@ -20,10 +20,11 @@ const DEFAULT_ICONS: SiteIcon[] = [
 export const useIconsStore = defineStore('icons', () => {
   const icons = ref<SiteIcon[]>(structuredClone(DEFAULT_ICONS))
 
+  // 过滤掉软删除的图标
   const currentIcons = computed(() => {
     const groupsStore = useGroupsStore()
     return icons.value
-      .filter(i => i.groupId === groupsStore.activeGroupId)
+      .filter(i => i.groupId === groupsStore.activeGroupId && !i.deletedAt)
       .sort((a, b) => a.order - b.order)
   })
 
@@ -38,17 +39,28 @@ export const useIconsStore = defineStore('icons', () => {
       type: 'site',
       groupId: groupsStore.activeGroupId,
       order: maxOrder + 1,
+      updatedAt: Date.now(),
+      dirty: true,
       ...icon,
     })
   }
 
+  // 软删除：保留记录用于同步推送，UI 层通过 deletedAt 过滤不可见
   function removeIcon(id: string) {
-    icons.value = icons.value.filter(i => i.id !== id)
+    const icon = icons.value.find(i => i.id === id)
+    if (!icon) return
+    icon.deletedAt = Date.now()
+    icon.updatedAt = Date.now()
+    icon.dirty = true
   }
 
   function updateIcon(id: string, updates: Partial<SiteIcon>) {
     const icon = icons.value.find(i => i.id === id)
-    if (icon) Object.assign(icon, updates)
+    if (icon) {
+      Object.assign(icon, updates)
+      icon.updatedAt = Date.now()
+      icon.dirty = true
+    }
   }
 
   function updateIconSize(id: string, size: IconSize) {
@@ -59,17 +71,62 @@ export const useIconsStore = defineStore('icons', () => {
     const otherIcons = icons.value.filter(
       i => !newIcons.find(n => n.id === i.id)
     )
+    const now = Date.now()
     icons.value = [
       ...otherIcons,
-      ...newIcons.map((icon, idx) => ({ ...icon, order: idx })),
+      ...newIcons.map((icon, idx) => ({ ...icon, order: idx, updatedAt: now, dirty: true })),
     ]
+  }
+
+  // 返回所有需要同步的图标（含软删除记录）
+  function getDirtyIcons(): SiteIcon[] {
+    return icons.value.filter(i => i.dirty)
+  }
+
+  // 应用服务端单条冲突数据
+  function applyRemoteItem(item: { id: string; data: Record<string, unknown>; updatedAt: number }) {
+    const idx = icons.value.findIndex(i => i.id === item.id)
+    if (idx !== -1) {
+      icons.value[idx] = { ...icons.value[idx]!, ...(item.data as unknown as Partial<SiteIcon>), updatedAt: item.updatedAt, dirty: false }
+    }
+  }
+
+  // 应用服务端增量拉取结果
+  function applyRemoteChanges(items: { id: string; data: Record<string, unknown>; updatedAt: number; deletedAt?: number | null }[]) {
+    for (const item of items) {
+      const idx = icons.value.findIndex(i => i.id === item.id)
+      const remoteIcon = { ...(item.data as unknown as SiteIcon), updatedAt: item.updatedAt, deletedAt: item.deletedAt ?? null, dirty: false }
+
+      if (item.deletedAt) {
+        // 服务端软删除 → 本地移除
+        if (idx !== -1) icons.value.splice(idx, 1)
+        continue
+      }
+
+      if (idx === -1) {
+        icons.value.push(remoteIcon)
+      } else if (item.updatedAt > (icons.value[idx]!.updatedAt ?? 0)) {
+        icons.value[idx] = remoteIcon
+      }
+    }
+  }
+
+  // 同步完成后：移除软删除项、清除脏标记
+  function clearDirty() {
+    icons.value = icons.value
+      .filter(i => !i.deletedAt)
+      .map(i => ({ ...i, dirty: false }))
   }
 
   function resetIcons() {
     icons.value = structuredClone(DEFAULT_ICONS)
   }
 
-  return { icons, currentIcons, addIcon, removeIcon, updateIcon, updateIconSize, reorderIcons, resetIcons }
+  return {
+    icons, currentIcons,
+    addIcon, removeIcon, updateIcon, updateIconSize, reorderIcons, resetIcons,
+    getDirtyIcons, applyRemoteItem, applyRemoteChanges, clearDirty,
+  }
 }, {
   persist: {
     key: 'aitabs-icons',

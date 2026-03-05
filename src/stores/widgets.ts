@@ -24,10 +24,11 @@ const DEFAULT_WIDGETS: Widget[] = [
 export const useWidgetsStore = defineStore('widgets', () => {
   const widgets = ref<Widget[]>(structuredClone(DEFAULT_WIDGETS))
 
+  // 过滤软删除的 widget
   const currentWidgets = computed(() => {
     const groupsStore = useGroupsStore()
     return widgets.value
-      .filter(w => w.groupId === groupsStore.activeGroupId)
+      .filter(w => w.groupId === groupsStore.activeGroupId && !w.deletedAt)
       .sort((a, b) => a.order - b.order)
   })
 
@@ -43,33 +44,83 @@ export const useWidgetsStore = defineStore('widgets', () => {
       order: maxOrder + 1,
       groupId: groupsStore.activeGroupId,
       config,
+      updatedAt: Date.now(),
+      dirty: true,
     })
   }
 
   function removeWidget(id: string) {
-    widgets.value = widgets.value.filter(w => w.id !== id)
+    const widget = widgets.value.find(w => w.id === id)
+    if (!widget) return
+    widget.deletedAt = Date.now()
+    widget.updatedAt = Date.now()
+    widget.dirty = true
   }
 
   function updateWidget(id: string, updates: Partial<Widget>) {
     const widget = widgets.value.find(w => w.id === id)
-    if (widget) Object.assign(widget, updates)
+    if (widget) {
+      Object.assign(widget, updates)
+      widget.updatedAt = Date.now()
+      widget.dirty = true
+    }
   }
 
   function reorderWidgets(newWidgets: Widget[]) {
     const others = widgets.value.filter(
       w => !newWidgets.find(n => n.id === w.id)
     )
+    const now = Date.now()
     widgets.value = [
       ...others,
-      ...newWidgets.map((w, i) => ({ ...w, order: i })),
+      ...newWidgets.map((w, i) => ({ ...w, order: i, updatedAt: now, dirty: true })),
     ]
+  }
+
+  function getDirtyWidgets(): Widget[] {
+    return widgets.value.filter(w => w.dirty)
+  }
+
+  function applyRemoteItem(item: { id: string; data: Record<string, unknown>; updatedAt: number }) {
+    const idx = widgets.value.findIndex(w => w.id === item.id)
+    if (idx !== -1) {
+      widgets.value[idx] = { ...widgets.value[idx]!, ...(item.data as unknown as Partial<Widget>), updatedAt: item.updatedAt, dirty: false }
+    }
+  }
+
+  function applyRemoteChanges(items: { id: string; data: Record<string, unknown>; updatedAt: number; deletedAt?: number | null }[]) {
+    for (const item of items) {
+      const idx = widgets.value.findIndex(w => w.id === item.id)
+      const remote = { ...(item.data as unknown as Widget), updatedAt: item.updatedAt, deletedAt: item.deletedAt ?? null, dirty: false }
+
+      if (item.deletedAt) {
+        if (idx !== -1) widgets.value.splice(idx, 1)
+        continue
+      }
+
+      if (idx === -1) {
+        widgets.value.push(remote)
+      } else if (item.updatedAt > (widgets.value[idx]!.updatedAt ?? 0)) {
+        widgets.value[idx] = remote
+      }
+    }
+  }
+
+  function clearDirty() {
+    widgets.value = widgets.value
+      .filter(w => !w.deletedAt)
+      .map(w => ({ ...w, dirty: false }))
   }
 
   function resetWidgets() {
     widgets.value = structuredClone(DEFAULT_WIDGETS)
   }
 
-  return { widgets, currentWidgets, addWidget, removeWidget, updateWidget, reorderWidgets, resetWidgets }
+  return {
+    widgets, currentWidgets,
+    addWidget, removeWidget, updateWidget, reorderWidgets, resetWidgets,
+    getDirtyWidgets, applyRemoteItem, applyRemoteChanges, clearDirty,
+  }
 }, {
   persist: {
     key: 'aitabs-widgets',

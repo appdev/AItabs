@@ -90,4 +90,8 @@ export interface NavGroup {
   name: string
   icon: string
   order: number
+  // 同步元数据
+  updatedAt?: number
+  deletedAt?: number | null
+  dirty?: boolean
 }

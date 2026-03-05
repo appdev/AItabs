@@ -17,7 +17,6 @@ declare module 'vue' {
     ContextMenu: typeof import('./components/contextmenu/ContextMenu.vue')['default']
     CountdownWidget: typeof import('./components/widgets/CountdownWidget.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
-    ElDialog: typeof import('element-plus/es')['ElDialog']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElInputNumber: typeof import('element-plus/es')['ElInputNumber']
     ElSlider: typeof import('element-plus/es')['ElSlider']

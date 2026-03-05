@@ -4,6 +4,8 @@ import { Icon } from '@iconify/vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useWallpaper } from '@/composables/useWallpaper'
 import { useContextMenu } from '@/composables/useContextMenu'
+import { useAuth } from '@/composables/useAuth'
+import { initAutoSync, connectSSE } from '@/services/syncManager'
 import Header from '@/components/layout/Header.vue'
 import SearchBar from '@/components/layout/SearchBar.vue'
 import IconGrid from '@/components/layout/IconGrid.vue'
@@ -18,6 +20,7 @@ const WidgetConfigDialog = defineAsyncComponent(() => import('@/components/dialo
 const settingsStore = useSettingsStore()
 const { activeSrc, wallpaperOpacity } = useWallpaper()
 const { showSettingsFromMenu, showEditIcon, editIconId } = useContextMenu()
+const { isLoggedIn, checkSession } = useAuth()
 
 const showSettings = ref(false)
 const showAdd = ref(false)
@@ -52,8 +55,17 @@ function openAdd(tab: typeof addTab.value) {
   showAdd.value = true
 }
 
-onMounted(() => {
+onMounted(async () => {
   settingsStore.updateCSSVars()
+
+  // 初始化自动同步监听（防抖 2 秒触发 push）
+  initAutoSync()
+
+  // 验证已保存的 token，有效则连接 SSE
+  const valid = await checkSession()
+  if (valid && isLoggedIn.value) {
+    connectSSE()
+  }
 })
 </script>
 

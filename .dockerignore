@@ -1,0 +1,38 @@
+# Docker 构建忽略文件
+
+# 依赖（容器内重新安装）
+node_modules/
+
+# 开发产物
+dist-ssr/
+.vite/
+
+# 编辑器
+.idea/
+.vscode/
+.DS_Store
+
+# 日志
+*.log
+npm-debug.log*
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# Claude
+.claude/
+.claudeignore
+
+# 文档
+docs/
+screenshots/
+README.md
+
+# 锁文件（使用 npm ci 时不需要）
+# package-lock.json  # 保留，npm ci 需要

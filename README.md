@@ -1,5 +1,11 @@
-# Vue 3 + TypeScript + Vite
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+现在很多的 XXTab 要么收费，要么就是假开源,github 上都是编译后的代码。
+
+当然也有一些非常优秀的开源作品，但是要么是 NAS监控类的，要么是功能不全，比如只能添加网址导航的。
+
+既然 AI 这么发达，为什么不直接 Vibe 一个 tab 页呢？
+
+于是就有了 AITab
+
+目前还处于早期，如果你有其他想法也可以参与进来。一起 Vibe

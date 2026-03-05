@@ -670,12 +670,13 @@ src/
 
 ---
 
-### 阶段六：交互完善（4.5h）
+### 阶段六：交互完善（6h）
 
 | 编号 | 任务名称 | 预估工时 | 前置依赖 |
 |------|----------|----------|----------|
 | T21 | 壁纸系统 | 1.5h | T07 |
 | T22 | 图标编辑功能 | 1.5h | T08, T11 |
+| T22b | 右键菜单尺寸调整 | 1.5h | T11, T22 |
 | T23 | 搜索引擎管理与全局搜索增强 | 1.5h | T05 |
 
 #### T21 - 壁纸系统（1.5h）
@@ -722,6 +723,55 @@ src/
 - "删除"点击 → ElMessageBox.confirm → iconsStore.removeIcon(targetId)
 
 **验证**：编辑图标后立即更新显示，删除后图标消失
+
+---
+
+#### T22b - 右键菜单尺寸调整（1.5h）
+
+**文件**：修改 `components/contextmenu/ContextMenu.vue`，修改 `stores/icons.ts` 和 `stores/widgets.ts`
+
+**背景**（实测 iTab 数据）：
+- 网格基础格：60px × 60px，间距 30px
+- 计算公式：`实际像素 = n × 60 + (n-1) × 30`
+- 实测尺寸：`1x1(60×60)` `1x2(150×60)` `2x1(60×150)` `2x2(150×150)` `2x4(330×150)`
+- 右键菜单「布局」行展示 5 个尺寸选项，当前尺寸高亮
+
+**ContextMenu.vue 中新增「布局」行**：
+- 针对 `targetType === 'icon'` 或 `targetType === 'widget'` 时显示
+- 使用 `<div class="contextmenu-layout">` 横排展示 5 个尺寸标签：`1x1` `1x2` `2x1` `2x2` `2x4`
+- 当前图标/组件的 size 对应按钮高亮（active 样式）
+- 点击尺寸按钮后：
+  - 图标：调用 `iconsStore.updateIconSize(targetId, newSize)`
+  - 组件：调用 `widgetsStore.updateWidget(targetId, { size: newSize })`
+  - 关闭右键菜单
+
+**stores/icons.ts 确认有 `updateIconSize(id, size)` 方法**（已有，确认即可）
+
+**stores/widgets.ts 确认 `updateWidget` 支持更新 size 字段**（已有，确认即可）
+
+**样式**：
+```css
+.contextmenu-layout {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+.contextmenu-layout em {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-style: normal;
+  font-size: 11px;
+  background: rgba(255,255,255,0.1);
+  cursor: pointer;
+}
+.contextmenu-layout em.active {
+  background: rgba(255,255,255,0.3);
+  color: white;
+  font-weight: 600;
+}
+```
+
+**验证**：右键图标/组件 → 布局行出现 → 点击不同尺寸 → 网格中该元素立即改变大小
 
 ---
 
@@ -795,8 +845,8 @@ src/
 T01 → T02 → T03 ──┬── T04 ──┐
                    ├── T05 ──┤── T07 ──┬── T08 ──┬── T09
                    ├── T06 ──┘         │         ├── T10
-                   │                   │         ├── T11 ──┐
-                   │                   │         └─────────┴── T22
+                   │                   │         ├── T11 ──┬── T22 ──── T22b
+                   │                   │         └─────────┘
                    │                   ├── T12 ──┬── T13
                    │                   │         └── T14
                    │                   ├── T15
@@ -808,6 +858,7 @@ T01 → T02 → T03 ──┬── T04 ──┐
                              ├── T19
                              └── T20
 T05 ──── T23
+T11 ──── T22b
 ```
 
 ## 可并行任务组
@@ -816,7 +867,7 @@ T05 ──── T23
 
 | 组别 | 任务链 | 负责内容 |
 |------|--------|----------|
-| 组 A | T08 → T09, T10, T11 → T22 | 图标系统 |
+| 组 A | T08 → T09, T10, T11 → T22 → T22b | 图标系统 + 尺寸调整 |
 | 组 B | T12 → T13 + T14, T15 | 弹窗系统 |
 | 组 C | T16 → T17, T18, T19, T20 | 小组件 |
 | 组 D | T21, T23, T24, T25 | 独立功能 |
@@ -830,6 +881,6 @@ T05 ──── T23
 | 阶段三：图标系统 | 4 | 6.5h |
 | 阶段四：弹窗系统 | 4 | 7.5h |
 | 阶段五：小组件开发 | 5 | 8.5h |
-| 阶段六：交互完善 | 3 | 4.5h |
+| 阶段六：交互完善 | 4 | 6h |
 | 阶段七：数据与部署 | 2 | 3h |
-| **合计** | **25** | **39h** |
+| **合计** | **26** | **40.5h** |

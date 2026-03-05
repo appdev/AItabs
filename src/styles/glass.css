@@ -1,6 +1,6 @@
 .glass-sidebar {
-  backdrop-filter: blur(6px);
-  background: rgba(var(--img-bg), var(--sidebar-opacity));
+  backdrop-filter: none;
+  background: transparent;
 }
 
 .glass-search {
@@ -21,11 +21,16 @@
 .glass-menu {
   backdrop-filter: blur(10px);
   background: rgba(11, 11, 11, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: rgba(0, 0, 0, 0.5) 0px 10px 30px 0px;
 }
 
 .glass-dialog {
-  backdrop-filter: blur(18px);
-  background: rgba(var(--img-bg), 0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.13);
+  box-shadow: rgba(0, 0, 0, 0.48) 0px 12px 32px 0px;
 }
 
 .glass-search-engine {

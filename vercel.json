@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/bing-wallpaper/:path*",
+      "destination": "https://cn.bing.com/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}

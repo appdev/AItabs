@@ -41,7 +41,12 @@ export const useGroupsStore = defineStore('groups', () => {
     groups.value = newGroups.map((g, i) => ({ ...g, order: i }))
   }
 
-  return { groups, activeGroupId, sortedGroups, setActiveGroup, addGroup, removeGroup, reorderGroups }
+  function resetGroups() {
+    groups.value = structuredClone(DEFAULT_GROUPS)
+    activeGroupId.value = '1'
+  }
+
+  return { groups, activeGroupId, sortedGroups, setActiveGroup, addGroup, removeGroup, reorderGroups, resetGroups }
 }, {
   persist: {
     key: 'aitabs-groups',

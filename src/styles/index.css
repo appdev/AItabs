@@ -63,3 +63,21 @@ body {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* 拖拽样式 */
+.drag-ghost {
+  opacity: 0.4;
+  border-radius: var(--icon-radius);
+  background: rgba(255, 255, 255, 0.08);
+  outline: 2px dashed rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+.drag-chosen {
+  opacity: 0.95;
+  cursor: grabbing;
+  transform: scale(1.08);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-radius: var(--icon-radius);
+  z-index: 10;
+}

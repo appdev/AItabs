@@ -4,7 +4,8 @@ export interface SiteIcon {
   id: string
   name: string
   url: string
-  icon: string
+  icon: string          // 图片 URL（空则退到文字显示）
+  iconText?: string     // 自定义文字图标（优先级：iconText > icon 首字 > name 首字）
   bgColor: string
   size: IconSize
   type: 'site' | 'folder' | 'builtin'

@@ -21,11 +21,14 @@ export function useGridLayout() {
     return Math.min(windowWidth.value, maxW)
   })
 
-  // 每行列数（向下取整）
+  // 每行列数（向下取整，用水平间距计算）
   const columnCount = computed(() => {
     const s = settingsStore.settings.icon
     return Math.max(1, Math.floor(containerWidth.value / (s.iconSize + s.gapX)))
   })
 
-  return { windowWidth, containerWidth, columnCount }
+  // 导出 gapY 供 IconGrid 使用（垂直间距独立控制）
+  const gapY = computed(() => settingsStore.settings.icon.gapY)
+
+  return { windowWidth, containerWidth, columnCount, gapY }
 }

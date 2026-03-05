@@ -1,0 +1,27 @@
+# Claude Code 忽略文件
+# 以下内容不会被读取进上下文
+
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+dist-ssr/
+
+# 截图/图片资源
+screenshots/
+
+# 日志
+*.log
+npm-debug.log*
+
+# 编辑器
+.idea/
+.DS_Store
+
+# 类型自动生成文件（频繁变动，通常不需要阅读）
+src/auto-imports.d.ts
+src/components.d.ts
+
+# 锁文件（体积大，无需读取）
+package-lock.json

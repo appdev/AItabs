@@ -1,4 +1,4 @@
-export type WidgetSize = '2x2' | '2x4'
+export type WidgetSize = '1x1' | '1x2' | '2x1' | '2x2' | '2x4'
 
 export type WidgetType =
   | 'weather'

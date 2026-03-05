@@ -65,7 +65,11 @@ export const useWidgetsStore = defineStore('widgets', () => {
     ]
   }
 
-  return { widgets, currentWidgets, addWidget, removeWidget, updateWidget, reorderWidgets }
+  function resetWidgets() {
+    widgets.value = structuredClone(DEFAULT_WIDGETS)
+  }
+
+  return { widgets, currentWidgets, addWidget, removeWidget, updateWidget, reorderWidgets, resetWidgets }
 }, {
   persist: {
     key: 'aitabs-widgets',

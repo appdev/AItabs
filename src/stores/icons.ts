@@ -65,7 +65,11 @@ export const useIconsStore = defineStore('icons', () => {
     ]
   }
 
-  return { icons, currentIcons, addIcon, removeIcon, updateIcon, updateIconSize, reorderIcons }
+  function resetIcons() {
+    icons.value = structuredClone(DEFAULT_ICONS)
+  }
+
+  return { icons, currentIcons, addIcon, removeIcon, updateIcon, updateIconSize, reorderIcons, resetIcons }
 }, {
   persist: {
     key: 'aitabs-icons',

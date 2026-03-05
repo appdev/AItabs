@@ -13,7 +13,7 @@ export interface ThemeSettings {
 export interface WallpaperSettings {
   mask: number
   blur: number
-  type: 'default' | 'url' | 'local'
+  type: 'default' | 'url' | 'local' | 'bing'
   src: string
   thumb: string
 }

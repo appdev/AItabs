@@ -8,6 +8,7 @@ export interface ContextMenuState {
   targetType: 'icon' | 'widget' | 'grid'
 }
 
+// 模块级单例，所有调用方共享同一份状态
 const state = ref<ContextMenuState>({
   visible: false,
   x: 0,
@@ -15,6 +16,15 @@ const state = ref<ContextMenuState>({
   targetId: '',
   targetType: 'grid',
 })
+
+const showIconEditor = ref(false)
+const editingIconId = ref('')
+const showSettingsFromMenu = ref(false)
+// 编辑图标：复用 AddDialog（custom tab）
+const showEditIcon = ref(false)
+const editIconId = ref('')
+const showWidgetConfig = ref(false)
+const configuringWidgetId = ref('')
 
 export function useContextMenu() {
   function show(e: MouseEvent, targetId: string, targetType: 'icon' | 'widget' | 'grid' = 'icon') {
@@ -31,6 +41,25 @@ export function useContextMenu() {
 
   function hide() {
     state.value.visible = false
+  }
+
+  function openEditor() {
+    editingIconId.value = state.value.targetId
+    editIconId.value = state.value.targetId
+    hide()
+    showIconEditor.value = true
+    showEditIcon.value = true
+  }
+
+  function openSettings() {
+    hide()
+    showSettingsFromMenu.value = true
+  }
+
+  function openWidgetConfig() {
+    configuringWidgetId.value = state.value.targetId
+    hide()
+    showWidgetConfig.value = true
   }
 
   function onClickOutside(e: MouseEvent) {
@@ -54,5 +83,5 @@ export function useContextMenu() {
     document.removeEventListener('keydown', onKeydown)
   })
 
-  return { state, show, hide }
+  return { state, show, hide, openEditor, openSettings, openWidgetConfig, showIconEditor, editingIconId, showSettingsFromMenu, showWidgetConfig, configuringWidgetId, showEditIcon, editIconId }
 }

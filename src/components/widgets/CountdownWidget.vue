@@ -7,7 +7,6 @@ const props = defineProps<{
   widget: Widget
 }>()
 
-// 从 widget.config 读取配置，提供默认值
 const config = computed(() => ({
   offWork: (props.widget.config.offWork as string) ?? '18:00',
   salary: (props.widget.config.salary as number) ?? 10000,
@@ -23,7 +22,7 @@ const workEnd = computed(() => {
 })
 
 const countdown = computed(() => {
-  let target = dayjs().hour(workEnd.value.hour).minute(workEnd.value.minute).second(0)
+  const target = dayjs().hour(workEnd.value.hour).minute(workEnd.value.minute).second(0)
   if (now.value.isAfter(target)) return '00:00:00'
   const diff = target.diff(now.value)
   const h = Math.floor(diff / 3600000)
@@ -46,20 +45,31 @@ const nextHoliday = computed(() => {
     { name: '劳动节', date: dayjs(`${year}-05-01`) },
     { name: '端午节', date: dayjs(`${year}-06-10`) },
     { name: '国庆节', date: dayjs(`${year}-10-01`) },
-    { name: '元旦', date: dayjs(`${year + 1}-01-01`) },
+    { name: '元旦',   date: dayjs(`${year + 1}-01-01`) },
   ]
   const next = candidates.find(h => h.date.isAfter(now.value)) ?? candidates[candidates.length - 1]!
   return { name: next.name, days: Math.max(0, Math.ceil(next.date.diff(now.value, 'day', true))) }
 })
 
-// 今日收入：月薪 / 22工作日 * 已过工时比例（9点到下班时间）
+// 动态计算当月工作日数（周一至周五）
+const workdaysThisMonth = computed(() => {
+  const d = now.value
+  const daysInMonth = d.daysInMonth()
+  let count = 0
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dow = dayjs(new Date(d.year(), d.month(), day)).day()
+    if (dow !== 0 && dow !== 6) count++ // 排除周六(6)和周日(0)
+  }
+  return count
+})
+
+// 今日收入 = (月薪 / 当月工作日数) × (已过工时 / 8)
+// 已过工时：从 9:00 开始，最多累计 8 小时
 const todayEarnings = computed(() => {
-  const startHour = 9
-  const endHour = workEnd.value.hour + workEnd.value.minute / 60
   const currentHour = now.value.hour() + now.value.minute() / 60
-  const ratio = Math.min(1, Math.max(0, (currentHour - startHour) / (endHour - startHour)))
-  const daily = config.value.salary / 22
-  return (ratio * daily).toFixed(0)
+  const workedHours = Math.min(8, Math.max(0, currentHour - 9))
+  const daily = config.value.salary / workdaysThisMonth.value
+  return (daily * workedHours / 8).toFixed(2)
 })
 
 onMounted(() => {
@@ -72,29 +82,41 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="w-full h-full flex bg-gradient-to-br from-rose-100/90 via-pink-50/80 to-amber-50/70 p-4">
-    <!-- 左侧：倒计时主体 -->
-    <div class="flex-1 flex flex-col justify-center min-w-0">
-      <div class="text-sm text-gray-600 mb-1">下班还有</div>
-      <div class="text-4xl font-mono font-light text-gray-800 tabular-nums">{{ countdown }}</div>
-      <div class="flex flex-wrap gap-2 mt-4">
-        <div class="px-3 py-2 rounded-lg bg-white/60 backdrop-blur-sm text-sm">
-          <div class="text-gray-500 text-xs">发工资倒计时</div>
-          <div class="font-medium text-gray-800">{{ payDays }} 天</div>
-        </div>
-        <div class="px-3 py-2 rounded-lg bg-white/60 backdrop-blur-sm text-sm">
-          <div class="text-gray-500 text-xs">{{ nextHoliday.name }}</div>
-          <div class="font-medium text-gray-800">{{ nextHoliday.days }} 天</div>
-        </div>
-        <div class="px-3 py-2 rounded-lg bg-white/60 backdrop-blur-sm text-sm">
-          <div class="text-gray-500 text-xs">今日摸鱼收益</div>
-          <div class="font-medium text-emerald-600">¥{{ todayEarnings }}</div>
+  <div class="w-full h-full flex bg-gradient-to-br from-rose-100/90 via-pink-50/80 to-amber-50/70 p-3 gap-3">
+
+    <!-- 左侧：倒计时 + 猫咪（约 60%） -->
+    <div class="flex-1 flex flex-col justify-between min-w-0">
+      <div>
+        <div class="text-xs text-gray-500 mb-1">下班还有</div>
+        <div
+          class="font-mono font-light text-gray-800 tabular-nums"
+          style="font-size: clamp(1.4rem, 3.5vw, 2rem)"
+        >
+          {{ countdown }}
         </div>
       </div>
+      <!-- 猫咪装饰 -->
+      <div class="text-3xl opacity-70 select-none">🐱</div>
     </div>
-    <!-- 右侧：猫咪装饰 -->
-    <div class="flex flex-col justify-center items-center w-20 shrink-0 text-5xl opacity-80">
-      🐱
+
+    <!-- 右侧：3 个迷你卡片（约 40%） -->
+    <div class="flex flex-col gap-1.5 justify-center w-[40%] flex-shrink-0">
+      <!-- 发薪日 -->
+      <div class="px-2 py-1.5 rounded-lg bg-white/60 backdrop-blur-sm">
+        <div class="text-gray-400 text-[10px] leading-none mb-0.5">发薪</div>
+        <div class="text-gray-800 text-xs font-medium">{{ payDays }} 天</div>
+      </div>
+      <!-- 节日倒计时 -->
+      <div class="px-2 py-1.5 rounded-lg bg-white/60 backdrop-blur-sm">
+        <div class="text-gray-400 text-[10px] leading-none mb-0.5">{{ nextHoliday.name }}</div>
+        <div class="text-gray-800 text-xs font-medium">{{ nextHoliday.days }} 天</div>
+      </div>
+      <!-- 今日收入 -->
+      <div class="px-2 py-1.5 rounded-lg bg-white/60 backdrop-blur-sm">
+        <div class="text-gray-400 text-[10px] leading-none mb-0.5">今天赚了</div>
+        <div class="text-emerald-600 text-xs font-medium">¥{{ todayEarnings }}</div>
+      </div>
     </div>
+
   </div>
 </template>

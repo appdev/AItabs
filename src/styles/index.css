@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+@import './glass.css';
+
+:root {
+  --wall-blur: 0px;
+  --wall-mask: 0;
+  --dialog-blur: blur(10px);
+
+  --icon-size: 60px;
+  --icon-gap: 30px;
+  --icon-radius: 18px;
+  --icon-opacity: 1;
+  --icon-name-size: 12px;
+  --icon-name-color: #fff;
+
+  --sidebar-width: 50px;
+  --sidebar-opacity: 0.4;
+
+  --search-height: 46px;
+  --search-radius: 23px;
+  --search-bg-color: 0.5;
+
+  --time-size: 70px;
+  --time-color: #fff;
+  --time-font-weight: 400;
+  --time-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --img-bg: 38, 64, 85;
+  --img-text: 233, 233, 233;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'PingFang SC', -apple-system, system-ui, 'Helvetica Neue', Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+body {
+  background: #000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

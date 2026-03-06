@@ -1,4 +1,5 @@
 import { and, eq, gt } from 'drizzle-orm'
+import { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core'
 import { db } from '@/db/client.ts'
 import { syncIcons, syncWidgets, syncGroups, syncSettings } from '@/db/schema.ts'
 import type {
@@ -159,7 +160,8 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
 // ---- 私有：单条数据的 LWW upsert ----
 // deletedAt 不为 null 时表示软删除，保留行但标记删除时间
 async function upsertItem(
-  tx: typeof db,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tx: BaseSQLiteDatabase<'sync', void, any, any>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   table: any,
   userId: string,

@@ -120,7 +120,7 @@ body {
 }
 
 .dark .settings-panel .val {
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .dark .settings-panel .s-color {
@@ -133,7 +133,7 @@ body {
 }
 
 .dark .settings-panel .s-btngroup button {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .dark .settings-panel .s-btngroup button:hover {
@@ -153,7 +153,7 @@ body {
 }
 
 .dark .settings-panel .s-input::placeholder {
-  color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.38);
 }
 
 .dark .settings-panel .s-input:focus {
@@ -163,7 +163,7 @@ body {
 
 .dark .settings-panel .s-action-btn {
   background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .dark .settings-panel .s-action-btn:hover {
@@ -181,7 +181,7 @@ body {
 
 /* 设置面板左侧导航深色模式（对照源站: text=#dfdddd, active-bg=rgba(24,144,255,0.1)） */
 .dark .settings-panel nav button {
-  color: rgba(223, 221, 221, 0.7);
+  color: rgba(223, 221, 221, 0.85);
 }
 
 .dark .settings-panel nav button:hover {

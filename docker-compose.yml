@@ -6,7 +6,11 @@ services:
     container_name: aitabs-backend
     restart: unless-stopped
     volumes:
-      - ./data:/app/data
+      # 数据目录挂载：SQLite 数据库文件持久化存储
+      # 迁移数据时只需备份/恢复此目录即可
+      # 默认使用宿主机当前目录下的 ./data 文件夹，也可改为绝对路径
+      # 例：/your/custom/path/aitabs-data:/app/data
+      - ${DATA_DIR:-./data}:/app/data
     environment:
       - DB_PATH=/app/data/aitabs.db
       - JWT_SECRET=${JWT_SECRET}
@@ -28,7 +32,7 @@ services:
     container_name: aitabs-frontend
     restart: unless-stopped
     ports:
-      - "${PORT:-80}:80"
+      - "${PORT:-6600}:80"
     depends_on:
       backend:
         condition: service_healthy
@@ -43,6 +47,3 @@ services:
 networks:
   aitabs-net:
     driver: bridge
-
-volumes:
-  aitabs-data:

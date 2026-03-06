@@ -7,6 +7,11 @@ import { syncRoutes } from '@/routes/sync.ts'
 
 const app = new Hono()
 
+app.onError((err, c) => {
+  console.error(`[${c.req.method}] ${c.req.path} →`, err)
+  return c.json({ error: 'Internal Server Error' }, 500)
+})
+
 app.use('*', logger())
 app.use('*', cors({
   origin: env.FRONTEND_URL,

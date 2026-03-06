@@ -5,7 +5,7 @@ import { useSettingsStore } from '@/stores/settings'
 import { useWallpaper } from '@/composables/useWallpaper'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { useAuth } from '@/composables/useAuth'
-import { initAutoSync, connectSSE } from '@/services/syncManager'
+import { initAutoSync, connectSSE, pull } from '@/services/syncManager'
 import Header from '@/components/layout/Header.vue'
 import SearchBar from '@/components/layout/SearchBar.vue'
 import IconGrid from '@/components/layout/IconGrid.vue'
@@ -61,9 +61,10 @@ onMounted(async () => {
   // 初始化自动同步监听（防抖 2 秒触发 push）
   initAutoSync()
 
-  // 验证已保存的 token，有效则连接 SSE
+  // 验证已保存的 token，有效则拉取最新数据并连接 SSE
   const valid = await checkSession()
   if (valid && isLoggedIn.value) {
+    try { await pull() } catch { /* 首次拉取失败不影响启动 */ }
     connectSSE()
   }
 })
@@ -112,34 +113,7 @@ onMounted(async () => {
       <div class="w-full flex flex-col items-center pt-8 pb-20 min-h-full">
         <Header />
         <SearchBar class="w-full max-w-xl px-4 mt-2" />
-        <IconGrid class="mt-6 px-4 w-full" />
-
-        <div class="flex gap-3 mt-6">
-          <button
-            type="button"
-            class="glass-card px-4 py-2 rounded-full text-sm text-gray-700 hover:bg-white/70 transition-colors flex items-center gap-1"
-            @click="openAdd('widget')"
-          >
-            <Icon icon="mdi:plus" class="w-4 h-4" />
-            添加组件
-          </button>
-          <button
-            type="button"
-            class="glass-card px-4 py-2 rounded-full text-sm text-gray-700 hover:bg-white/70 transition-colors flex items-center gap-1"
-            @click="openAdd('nav')"
-          >
-            <Icon icon="mdi:web-plus" class="w-4 h-4" />
-            添加网址
-          </button>
-          <button
-            type="button"
-            class="glass-card px-4 py-2 rounded-full text-sm text-gray-700 hover:bg-white/70 transition-colors flex items-center gap-1"
-            @click="openAdd('custom')"
-          >
-            <Icon icon="mdi:plus" class="w-4 h-4" />
-            添加图标
-          </button>
-        </div>
+        <IconGrid class="mt-6 px-4 w-full" @add-icon="openAdd('custom')" />
       </div>
     </main>
 

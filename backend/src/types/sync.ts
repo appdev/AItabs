@@ -29,6 +29,7 @@ export interface ConflictItem {
 
 export interface PushResponse {
   ok: true
+  settingsVersion?: number
   conflicts: {
     icons?: ConflictItem[]
     widgets?: ConflictItem[]

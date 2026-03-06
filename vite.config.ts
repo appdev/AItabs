@@ -98,9 +98,26 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      '/codelife-api': {
+        target: 'https://api.codelife.cc',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/codelife-api/, ''),
+        headers: {
+          Referer: 'https://itab.link/',
+          Origin: 'https://itab.link'
+        }
+      },
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (_err, _req, res) => {
+            if (res && 'writeHead' in res && !res.headersSent) {
+              res.writeHead(502)
+              res.end()
+            }
+          })
+        },
       },
       '/bing-wallpaper': {
         target: 'https://cn.bing.com',

@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { ofetch, FetchError } from 'ofetch'
 import { nanoid } from 'nanoid'
 import { useAuth, isLoggedIn } from '@/composables/useAuth'
@@ -21,6 +21,9 @@ let sseRetryDelay = 3_000
 
 // ---- 防抖 timer ----
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+// pull 期间抑制 autoSync 的 push 调度
+let suppressAutoSync = false
 
 // ---- 工具函数 ----
 
@@ -102,6 +105,7 @@ export async function push(): Promise<void> {
     type ConflictItem = { id: string; serverData: Record<string, unknown>; serverUpdatedAt: number }
     type PushResult = {
       ok: boolean
+      settingsVersion?: number
       conflicts: {
         icons?: ConflictItem[]
         widgets?: ConflictItem[]
@@ -116,6 +120,11 @@ export async function push(): Promise<void> {
       body,
     })
 
+    // push 成功：更新 settings 版本号（防止下次 push 版本不匹配导致回退）
+    if (result.settingsVersion !== undefined) {
+      settingsStore.syncVersion = result.settingsVersion
+    }
+
     // 处理冲突：用服务端数据覆盖本地版本
     const c = result.conflicts
     c.icons?.forEach(ci => iconsStore.applyRemoteItem({ id: ci.id, data: ci.serverData, updatedAt: ci.serverUpdatedAt }))
@@ -125,11 +134,17 @@ export async function push(): Promise<void> {
       settingsStore.applyRemoteSettings(c.settings.serverData, c.settings.serverVersion)
     }
 
-    // 清除脏标记，移除软删除条目
-    iconsStore.clearDirty()
-    widgetsStore.clearDirty()
-    groupsStore.clearDirty()
-    settingsStore.clearDirty()
+    // 清除脏标记，移除软删除条目（抑制 watcher 触发多余 push）
+    suppressAutoSync = true
+    try {
+      iconsStore.clearDirty()
+      widgetsStore.clearDirty()
+      groupsStore.clearDirty()
+      settingsStore.clearDirty()
+      await nextTick()
+    } finally {
+      suppressAutoSync = false
+    }
   } catch (err) {
     if (err instanceof FetchError && err.response?.status === 401) {
       logout()
@@ -161,16 +176,24 @@ export async function pull(): Promise<void> {
       headers: authHeaders(),
     })
 
-    iconsStore.applyRemoteChanges(res.icons)
-    widgetsStore.applyRemoteChanges(res.widgets)
-    groupsStore.applyRemoteChanges(res.groups)
+    // 抑制 watcher 触发多余 push
+    suppressAutoSync = true
+    try {
+      iconsStore.applyRemoteChanges(res.icons)
+      widgetsStore.applyRemoteChanges(res.widgets)
+      groupsStore.applyRemoteChanges(res.groups)
 
-    if (res.settings) {
-      settingsStore.applyRemoteSettings(res.settings.data, res.settings.version)
+      if (res.settings) {
+        settingsStore.applyRemoteSettings(res.settings.data, res.settings.version)
+      }
+
+      lastSyncTime.value = res.serverTime
+      localStorage.setItem(LAST_SYNC_KEY, String(res.serverTime))
+
+      await nextTick()
+    } finally {
+      suppressAutoSync = false
     }
-
-    lastSyncTime.value = res.serverTime
-    localStorage.setItem(LAST_SYNC_KEY, String(res.serverTime))
   } catch (err) {
     if (err instanceof FetchError && err.response?.status === 401) {
       logout()
@@ -198,7 +221,7 @@ export function connectSSE(): void {
   const { token } = useAuth()
   if (!isLoggedIn.value || sseSource) return
 
-  const url = `/api/sync/sse?token=${encodeURIComponent(token.value)}`
+  const url = `/api/sync/sse?token=${encodeURIComponent(token.value)}&deviceId=${encodeURIComponent(getDeviceId())}`
   const src = new EventSource(url)
   sseSource = src
 
@@ -243,7 +266,7 @@ export function initAutoSync(): void {
   const settingsStore = useSettingsStore()
 
   function scheduleSync() {
-    if (!isLoggedIn.value) return
+    if (!isLoggedIn.value || suppressAutoSync) return
     if (debounceTimer) clearTimeout(debounceTimer)
     debounceTimer = setTimeout(async () => {
       try {

@@ -88,6 +88,7 @@ export const useSettingsStore = defineStore('settings', () => {
     const root = document.documentElement.style
     root.setProperty('--icon-size', `${s.icon.iconSize}px`)
     root.setProperty('--icon-gap', `${s.icon.gapX}px`)
+    root.setProperty('--icon-gap-y', `${s.icon.gapY}px`)
     root.setProperty('--icon-radius', `${s.icon.iconRadius}px`)
     root.setProperty('--icon-opacity', String(s.icon.opacity))
     root.setProperty('--icon-name-size', `${s.icon.nameSize}px`)
@@ -103,6 +104,11 @@ export const useSettingsStore = defineStore('settings', () => {
     root.setProperty('--time-font', s.time.font)
     root.setProperty('--wall-blur', `${s.wallpaper.blur}px`)
     root.setProperty('--wall-mask', String(s.wallpaper.mask))
+
+    // 深浅色模式：system 优先，否则用手动设置
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const isDark = s.theme.system ? prefersDark : s.theme.mode === 'dark'
+    document.documentElement.classList.toggle('dark', isDark)
   }
 
   function resetSettings() {

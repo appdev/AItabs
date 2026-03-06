@@ -102,7 +102,7 @@ function save() {
   }
   if (form.value.source === 'text') {
     updates.icon = ''
-    updates.iconText = form.value.iconText || form.value.name.slice(0, 2)
+    updates.iconText = form.value.iconText || form.value.name
   } else {
     updates.icon = form.value.icon
     updates.iconText = ''
@@ -114,7 +114,7 @@ function save() {
 // 预览框显示内容
 const previewText = computed(() => {
   if (form.value.source === 'text') {
-    return form.value.iconText || form.value.name.slice(0, 2) || '?'
+    return form.value.iconText || form.value.name || '?'
   }
   return form.value.name.slice(0, 1).toUpperCase() || '?'
 })

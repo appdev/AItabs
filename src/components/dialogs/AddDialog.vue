@@ -40,6 +40,7 @@ watch(() => props.visible, (val) => {
   // 新增模式：打开时重置表单
   if (val && !props.editIconId && props.activeTab === 'custom') {
     customForm.value = { url: '', name: '', icon: '', bgColor: '#0984fe', iconMode: 'image', iconText: '' }
+    uploadPreviewIcon.value = ''
   }
 })
 
@@ -230,19 +231,7 @@ const customForm = ref({
 })
 const fetchLoading = ref(false)
 const uploadInputRef = ref<HTMLInputElement | null>(null)
-
-// 预览字符
-const previewChar = computed(() => {
-  if (customForm.value.iconMode === 'text') {
-    return customForm.value.iconText.slice(0, 2) || customForm.value.name.charAt(0).toUpperCase() || '?'
-  }
-  return customForm.value.name.charAt(0).toUpperCase() || '?'
-})
-
-// 预览图标（图片 URL 或 base64）
-const previewIcon = computed(() =>
-  customForm.value.iconMode !== 'text' ? customForm.value.icon : ''
-)
+const uploadPreviewIcon = ref('')
 
 function triggerUpload() {
   uploadInputRef.value?.click()
@@ -257,7 +246,7 @@ function handleFileUpload(e: Event) {
   }
   const reader = new FileReader()
   reader.onload = (ev) => {
-    customForm.value.icon = ev.target?.result as string
+    uploadPreviewIcon.value = ev.target?.result as string
   }
   reader.readAsDataURL(file)
 }
@@ -288,10 +277,19 @@ function doSave(): boolean {
     return false
   }
   const isText = customForm.value.iconMode === 'text'
+  const isUpload = customForm.value.iconMode === 'upload'
+  
+  let finalIcon = ''
+  if (isUpload) {
+    finalIcon = uploadPreviewIcon.value
+  } else if (!isText) {
+    finalIcon = customForm.value.icon
+  }
+
   const payload = {
     name: customForm.value.name,
     url: customForm.value.url,
-    icon: isText ? '' : customForm.value.icon,
+    icon: finalIcon,
     iconText: isText ? (customForm.value.iconText.trim() || undefined) : undefined,
     bgColor: customForm.value.bgColor,
   }
@@ -311,6 +309,7 @@ function saveAndContinue() {
   if (!doSave()) return
   ElMessage.success('添加成功')
   customForm.value = { url: '', name: '', icon: '', bgColor: '#0984fe', iconMode: 'image', iconText: '' }
+  uploadPreviewIcon.value = ''
   if (uploadInputRef.value) uploadInputRef.value.value = ''
 }
 </script>
@@ -534,56 +533,93 @@ function saveAndContinue() {
                     <!-- 图标颜色 -->
                     <div>
                       <label class="text-gray-600 text-xs block mb-1.5">图标颜色</label>
-                      <div class="flex flex-wrap gap-1.5">
+                      <div class="flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-1 custom-scrollbar">
                         <button
                           v-for="c in PRESET_COLORS"
                           :key="c"
-                          class="w-6 h-6 rounded-full flex-shrink-0 transition-transform hover:scale-110"
-                          :style="{ backgroundColor: c, outline: customForm.bgColor === c ? '2px solid rgba(0,0,0,0.4)' : 'none', outlineOffset: '2px' }"
+                          class="w-5 h-5 rounded-full flex-shrink-0 transition-transform hover:scale-110 relative"
+                          :style="{ backgroundColor: c }"
                           @click="customForm.bgColor = c"
-                        />
-                        <input
-                          type="color"
-                          v-model="customForm.bgColor"
-                          class="w-6 h-6 rounded-full cursor-pointer border-0 p-0"
-                          title="自定义颜色"
-                        />
+                        >
+                          <Icon 
+                            v-if="customForm.bgColor === c" 
+                            icon="mdi:check" 
+                            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white" 
+                          />
+                        </button>
+                        <div class="relative w-5 h-5 flex-shrink-0 rounded-full overflow-hidden" :class="{'ring-2 ring-black/40 ring-offset-1': !PRESET_COLORS.includes(customForm.bgColor)}">
+                          <input
+                            type="color"
+                            v-model="customForm.bgColor"
+                            class="absolute inset-[-10px] w-[200%] h-[200%] cursor-pointer border-0 p-0"
+                            title="自定义颜色"
+                          />
+                        </div>
                       </div>
                     </div>
 
                     <!-- 图标模式切换 -->
-                    <div>
-                      <label class="text-gray-600 text-xs block mb-1.5">图标类型</label>
-                      <div class="flex rounded-lg overflow-hidden border border-black/10 text-xs w-fit">
-                        <button
-                          type="button"
-                          class="px-3 py-1.5 transition-colors"
-                          :class="customForm.iconMode === 'image' ? 'bg-black/8 text-gray-800' : 'text-gray-400 hover:bg-black/5'"
-                          @click="customForm.iconMode = 'image'; customForm.icon = ''"
-                        >图片 URL</button>
-                        <button
-                          type="button"
-                          class="px-3 py-1.5 transition-colors"
-                          :class="customForm.iconMode === 'upload' ? 'bg-black/8 text-gray-800' : 'text-gray-400 hover:bg-black/5'"
-                          @click="customForm.iconMode = 'upload'; customForm.icon = ''"
-                        >上传图片</button>
-                        <button
-                          type="button"
-                          class="px-3 py-1.5 transition-colors"
-                          :class="customForm.iconMode === 'text' ? 'bg-black/8 text-gray-800' : 'text-gray-400 hover:bg-black/5'"
-                          @click="customForm.iconMode = 'text'; customForm.icon = ''"
-                        >文字图标</button>
+                    <div class="flex gap-4">
+                        <!-- 左侧模式选择 -->
+                        <div class="flex gap-4 mt-2">
+                          <div class="flex flex-col items-center gap-2">
+                            <button
+                              type="button"
+                              class="w-[68px] h-[68px] rounded-[18px] flex items-center justify-center transition-all relative"
+                              :class="customForm.iconMode === 'text' ? 'ring-2 ring-blue-500 ring-offset-2' : 'hover:ring-2 hover:ring-black/10 hover:ring-offset-2'"
+                              :style="{ backgroundColor: customForm.bgColor }"
+                              @click="customForm.iconMode = 'text'"
+                            >
+                              <span class="text-white font-medium text-xl select-none px-1 overflow-hidden truncate max-w-full" :style="{ fontSize: (customForm.iconText || customForm.name).length > 2 ? '14px' : '20px' }">{{ customForm.iconText ? customForm.iconText : (customForm.name ? customForm.name : '文字') }}</span>
+                              <div v-if="customForm.iconMode === 'text'" class="absolute -bottom-1.5 -right-1.5 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-[2px] border-white shadow-sm z-10">
+                                <Icon icon="mdi:check" class="w-3 h-3 text-white" />
+                              </div>
+                            </button>
+                            <span class="text-xs text-gray-500">文字图标</span>
+                          </div>
+                          
+                          <div class="flex flex-col items-center gap-2" v-if="customForm.icon">
+                            <button
+                              type="button"
+                              class="w-[68px] h-[68px] rounded-[18px] flex items-center justify-center transition-all relative"
+                              :class="customForm.iconMode === 'image' ? 'ring-2 ring-blue-500 ring-offset-2' : 'hover:ring-2 hover:ring-black/10 hover:ring-offset-2'"
+                              :style="{ backgroundColor: customForm.bgColor }"
+                              @click="customForm.iconMode = 'image'"
+                            >
+                            <img :src="customForm.icon" class="w-full h-full object-cover rounded-[18px]" />
+                            
+                            <div v-if="customForm.iconMode === 'image'" class="absolute -bottom-1.5 -right-1.5 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-[2px] border-white shadow-sm z-10">
+                              <Icon icon="mdi:check" class="w-3 h-3 text-white" />
+                            </div>
+                            </button>
+                            <span class="text-xs text-gray-500">图标</span>
+                          </div>
+
+                          <div class="flex flex-col items-center gap-2">
+                            <button
+                              type="button"
+                              class="w-[68px] h-[68px] rounded-[18px] flex items-center justify-center transition-all relative"
+                              :class="[
+                                customForm.iconMode === 'upload' ? 'ring-2 ring-blue-500 ring-offset-2' : 'hover:ring-2 hover:ring-black/10 hover:ring-offset-2',
+                                !uploadPreviewIcon ? 'bg-black/5' : ''
+                              ]"
+                              :style="{ backgroundColor: uploadPreviewIcon ? customForm.bgColor : '' }"
+                              @click="customForm.iconMode = 'upload'"
+                            >
+                              <img v-if="uploadPreviewIcon" :src="uploadPreviewIcon" class="w-full h-full object-cover rounded-[18px]" />
+                              <Icon v-else icon="mdi:plus" class="w-8 h-8 text-gray-400" />
+                              
+                              <div v-if="customForm.iconMode === 'upload'" class="absolute -bottom-1.5 -right-1.5 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-[2px] border-white shadow-sm z-10">
+                                <Icon icon="mdi:check" class="w-3 h-3 text-white" />
+                              </div>
+                            </button>
+                            <span class="text-xs text-gray-500">上传</span>
+                          </div>
                       </div>
                     </div>
 
-                    <!-- 图标 URL（图片 URL 模式） -->
-                    <div v-if="customForm.iconMode === 'image'">
-                      <label class="text-gray-600 text-xs block mb-1.5">图标 URL（选填，自动获取或留空使用首字母）</label>
-                      <ElInput v-model="customForm.icon" placeholder="https://..." size="default" clearable />
-                    </div>
-
                     <!-- 上传图片（upload 模式） -->
-                    <div v-else-if="customForm.iconMode === 'upload'">
+                    <div v-if="customForm.iconMode === 'upload'" class="mt-4">
                       <label class="text-gray-600 text-xs block mb-1.5">上传图片（PNG / JPG / SVG，≤ 2MB）</label>
                       <input
                         ref="uploadInputRef"
@@ -601,7 +637,7 @@ function saveAndContinue() {
                           <Icon icon="mdi:upload" class="w-4 h-4" />
                           选择图片
                         </button>
-                        <span v-if="customForm.icon" class="text-green-500 text-xs flex items-center gap-1">
+                        <span v-if="uploadPreviewIcon" class="text-green-500 text-xs flex items-center gap-1">
                           <Icon icon="mdi:check-circle" class="w-3.5 h-3.5" />
                           已选择
                         </span>
@@ -610,15 +646,21 @@ function saveAndContinue() {
                     </div>
 
                     <!-- 图标文字（文字模式） -->
-                    <div v-else>
-                      <label class="text-gray-600 text-xs block mb-1.5">图标文字（最多 2 个字符，留空使用名称首字母）</label>
-                      <ElInput
-                        v-model="customForm.iconText"
-                        placeholder="如：AI、云、V"
-                        size="default"
-                        :maxlength="2"
-                        show-word-limit
-                      />
+                    <div v-if="customForm.iconMode === 'text'" class="mt-4">
+                      <label class="text-gray-600 text-xs block mb-1.5">图标文字（留空使用名称首字母）</label>
+                      <div class="relative">
+                        <ElInput
+                          v-model="customForm.iconText"
+                          placeholder="如：AI、云、V"
+                          size="default"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- 图标 URL（图片 URL 模式） -->
+                    <div v-if="customForm.iconMode === 'image'" class="mt-4">
+                      <label class="text-gray-600 text-xs block mb-1.5">图标 URL（选填，自动获取或留空使用首字母）</label>
+                      <ElInput v-model="customForm.icon" placeholder="https://..." size="default" clearable />
                     </div>
 
                     <!-- 操作按钮 -->
@@ -628,28 +670,7 @@ function saveAndContinue() {
                     </div>
                   </div>
 
-                  <!-- 预览区 -->
-                  <div class="w-48 border-l border-black/8 flex flex-col items-center justify-center gap-3 p-6 flex-shrink-0">
-                    <p class="text-gray-400 text-xs mb-2">预览</p>
-                    <div
-                      class="w-16 h-16 rounded-[18px] overflow-hidden flex items-center justify-center shadow-lg"
-                      :style="{ backgroundColor: customForm.bgColor }"
-                    >
-                      <img
-                        v-if="previewIcon"
-                        :src="previewIcon"
-                        class="w-[60%] h-[60%] object-contain"
-                        @error="customForm.icon = ''"
-                      />
-                      <span v-else class="text-white font-bold select-none"
-                        :style="{ fontSize: previewChar.length > 1 ? '18px' : '24px' }">
-                        {{ previewChar }}
-                      </span>
-                    </div>
-                    <p class="text-gray-600 text-sm text-center truncate max-w-full">
-                      {{ customForm.name || '网站名称' }}
-                    </p>
-                  </div>
+                  <!-- 右侧预览区已移除 -->
                 </div>
               </div>
             </template>
@@ -669,5 +690,19 @@ function saveAndContinue() {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+/* 自定义滚动条 */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
 }
 </style>

@@ -13,28 +13,39 @@ const openInNewTab = computed(
   () => props.icon.openInNewTab ?? settingsStore.settings.open.iconBlank
 )
 
-// 文字图标：优先 iconText，其次 name 首字母
+// 文字图标：优先 iconText，其次 name
 const displayText = computed(() => {
   const t = props.icon.iconText?.trim()
   if (t) return t
-  return props.icon.name?.charAt(0).toUpperCase() || '?'
+  return props.icon.name || '?'
 })
 
-// size 格式 "行x列"，图标本体边长取行列较小值（保证正方形）
-// 本体尺寸 = scale × --icon-size + (scale-1) × --icon-gap
-const iconScale = computed(() => {
+// size 格式 "行x列"，根据行列分别计算宽和高
+const iconRows = computed(() => {
   const parts = props.icon.size.split('x').map(Number)
-  return Math.min(parts[0] ?? 1, parts[1] ?? 1)
+  return parts[0] || 1
 })
 
-const iconSizeStyle = computed(() => {
-  const s = iconScale.value
-  if (s <= 1) return 'var(--icon-size)'
-  return `calc(var(--icon-size) * ${s} + var(--icon-gap) * ${s - 1})`
+const iconCols = computed(() => {
+  const parts = props.icon.size.split('x').map(Number)
+  return parts[1] || 1
+})
+
+const widthStyle = computed(() => {
+  const c = iconCols.value
+  if (c <= 1) return 'var(--icon-size)'
+  return `calc(var(--icon-size) * ${c} + var(--icon-gap) * ${c - 1})`
+})
+
+const heightStyle = computed(() => {
+  const r = iconRows.value
+  if (r <= 1) return 'var(--icon-size)'
+  return `calc(var(--icon-size) * ${r} + var(--icon-gap-y) * ${r - 1})`
 })
 
 const fontSizeStyle = computed(() => {
-  const s = iconScale.value
+  // 取长宽较小值作为字体大小的基准
+  const s = Math.min(iconRows.value, iconCols.value)
   if (s <= 1) return 'calc(var(--icon-size) * 0.4)'
   return `calc((var(--icon-size) * ${s} + var(--icon-gap) * ${s - 1}) * 0.35)`
 })
@@ -54,10 +65,10 @@ function handleClick() {
     @click="handleClick"
   >
     <div
-      class="flex items-center justify-center rounded-[var(--icon-radius)] overflow-hidden flex-shrink-0 transition-transform group-hover:scale-105"
+      class="flex items-center justify-center rounded-[var(--icon-radius)] overflow-hidden flex-shrink-0 transition-shadow shadow-[0_0_5px_rgba(0,0,0,0.1)] group-hover:shadow-[0_0_10px_rgba(0,0,0,0.3)] active:scale-[0.99]"
       :style="{
-        width: iconSizeStyle,
-        height: iconSizeStyle,
+        width: widthStyle,
+        height: heightStyle,
         backgroundColor: icon.bgColor,
       }"
     >
@@ -65,22 +76,24 @@ function handleClick() {
         v-if="icon.icon && !icon.iconText"
         :src="icon.icon"
         :alt="icon.name"
-        class="w-[60%] h-[60%] object-contain"
+        class="w-full h-full object-cover"
       />
       <span
         v-else
-        class="text-white font-bold select-none leading-none text-center px-1"
+        class="text-white font-bold select-none leading-none text-center px-1 overflow-hidden truncate max-w-full"
         :style="{
-          fontSize: displayText.length > 1
-            ? `calc(${fontSizeStyle} * 0.75)`
-            : fontSizeStyle
+          fontSize: displayText.length > 2
+            ? `calc(${fontSizeStyle} * 0.5)`
+            : displayText.length > 1
+              ? `calc(${fontSizeStyle} * 0.75)`
+              : fontSizeStyle
         }"
       >{{ displayText }}</span>
     </div>
     <span
       v-if="settingsStore.settings.icon.nameShow"
-      class="text-[var(--icon-name-size)] truncate max-w-full text-center"
-      :style="{ color: 'var(--icon-name-color)' }"
+      class="truncate max-w-full text-center"
+      :style="{ color: 'var(--icon-name-color)', fontSize: 'var(--icon-name-size)' }"
     >
       {{ icon.name }}
     </span>

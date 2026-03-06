@@ -106,7 +106,7 @@ syncRoutes.post('/push', async (c) => {
 // SSE 长连接：有数据推送时通知客户端主动 pull
 syncRoutes.get('/sse', async (c) => {
   const userId = c.get('userId')
-  const deviceId = c.req.header('X-Device-Id') ?? 'unknown'
+  const deviceId = c.req.header('X-Device-Id') ?? c.req.query('deviceId') ?? 'unknown'
 
   // 超出连接上限时提前拒绝，避免进入 SSE 流
   if (sseService.getClientCount(userId) >= 5) {
@@ -114,33 +114,43 @@ syncRoutes.get('/sse', async (c) => {
   }
 
   return streamSSE(c, async (stream) => {
-    // 注册连接，write 函数将事件推送给该客户端
-    const client = sseService.addClient(userId, deviceId, (event, data) =>
-      stream.writeSSE({ event, data }),
-    )
+    let heartbeat: ReturnType<typeof setInterval> | null = null
+    let client: ReturnType<typeof sseService.addClient> = null
 
-    // 极端情况下（并发连接时）仍可能超限
-    if (!client) {
-      await stream.writeSSE({ event: 'error', data: '连接数已达上限' })
-      return
-    }
+    try {
+      // 立即发送初始事件，确保响应缓冲区被刷新（防止代理误判为死连接）
+      await stream.writeSSE({ event: 'connected', data: JSON.stringify({ deviceId }) })
 
-    // 心跳：每 30 秒发一次，防止代理/浏览器因闲置超时断连
-    const heartbeat = setInterval(async () => {
-      try {
-        await stream.writeSSE({ event: 'ping', data: '' })
-      } catch {
-        clearInterval(heartbeat)
-      }
-    }, 30_000)
-
-    // 阻塞直到客户端断开
-    await new Promise<void>((resolve) => {
-      stream.onAbort(() => {
-        clearInterval(heartbeat)
-        sseService.removeClient(userId, client)
-        resolve()
+      client = sseService.addClient(userId, deviceId, async (event, data) => {
+        try {
+          await stream.writeSSE({ event, data })
+        } catch {
+          // 流已关闭，忽略写入错误
+        }
       })
-    })
+
+      if (!client) {
+        try { await stream.writeSSE({ event: 'error', data: '连接数已达上限' }) } catch { /* ignore */ }
+        return
+      }
+
+      heartbeat = setInterval(async () => {
+        try {
+          await stream.writeSSE({ event: 'ping', data: '' })
+        } catch {
+          if (heartbeat) clearInterval(heartbeat)
+          heartbeat = null
+        }
+      }, 25_000)
+
+      await new Promise<void>((resolve) => {
+        stream.onAbort(() => resolve())
+      })
+    } catch {
+      // streamSSE 内部错误（Bun 兼容性），静默处理
+    } finally {
+      if (heartbeat) clearInterval(heartbeat)
+      if (client) sseService.removeClient(userId, client)
+    }
   })
 })

@@ -308,19 +308,20 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
                   <div
                     v-for="engine in settings.searchEngines"
                     :key="engine.key"
-                    class="flex items-center gap-1.5 py-1"
+                    class="flex items-center gap-1.5 py-1.5 px-2 rounded-lg transition-colors"
+                    :class="settings.activeEngine === engine.key ? 'bg-black/5' : ''"
                   >
-                    <Icon icon="mdi:drag-vertical" class="drag-handle w-3.5 h-3.5 text-gray-300 cursor-grab flex-shrink-0" />
+                    <Icon icon="mdi:drag-vertical" class="drag-handle w-3.5 h-3.5 text-gray-400 cursor-grab flex-shrink-0" />
                     <span
-                      class="text-[11px] font-medium flex-shrink-0 px-1.5 py-0.5 rounded cursor-pointer"
-                      :class="settings.activeEngine === engine.key ? 'bg-black/8 text-gray-800' : 'text-gray-500'"
+                      class="text-[11px] font-medium flex-shrink-0 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                      :class="settings.activeEngine === engine.key ? 'bg-blue-500/15 text-blue-700' : 'text-gray-700 hover:text-gray-900'"
                       @click="settings.activeEngine = engine.key"
                     >{{ engine.title }}</span>
-                    <span class="text-gray-300 text-[10px] flex-1 truncate">{{ engine.href }}</span>
+                    <span class="text-gray-400 text-[10px] flex-1 truncate">{{ engine.href }}</span>
                     <button
                       v-if="settings.searchEngines.length > 1"
                       type="button"
-                      class="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                      class="text-gray-400 hover:text-red-400 transition-colors flex-shrink-0"
                       @click="removeSearchEngine(engine.key)"
                     >
                       <Icon icon="mdi:close" class="w-3.5 h-3.5" />
@@ -329,22 +330,22 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
                 </VueDraggable>
 
                 <!-- 添加新引擎 -->
-                <div class="flex gap-1 mt-2">
-                  <ElInput
+                <div class="flex gap-1.5 mt-2">
+                  <input
                     v-model="newEngineName"
                     placeholder="名称"
-                    size="small"
-                    style="width: 64px; flex-shrink: 0;"
+                    class="s-input"
+                    style="width: 60px; flex-shrink: 0;"
                   />
-                  <ElInput
+                  <input
                     v-model="newEngineHref"
                     placeholder="URL（可用 %s 占位）"
-                    size="small"
-                    class="flex-1"
+                    class="s-input flex-1"
+                    @keyup.enter="addSearchEngine"
                   />
                   <button
                     type="button"
-                    class="flex-shrink-0 px-2 text-gray-600 hover:text-gray-800 bg-black/5 hover:bg-black/10 rounded text-sm transition-colors"
+                    class="flex-shrink-0 w-7 h-7 flex items-center justify-center text-gray-600 hover:text-gray-900 bg-black/5 hover:bg-black/10 rounded-lg text-base transition-colors font-medium"
                     @click="addSearchEngine"
                   >+</button>
                 </div>
@@ -819,6 +820,28 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
   border: none;
   padding: 0;
   background: none;
+}
+
+/* 统一输入框样式 */
+.s-input {
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 7px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.75);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.s-input::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.s-input:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 /* 操作按钮 */

@@ -41,8 +41,8 @@ function handleClick() {
             :alt="child.name"
             class="w-full h-full object-contain p-0.5"
           />
-          <span v-else class="text-white text-[6px] font-bold">
-            {{ child.name.charAt(0).toUpperCase() }}
+          <span v-else class="text-white font-bold truncate max-w-full px-0.5" :style="{ fontSize: (child.iconText || child.name).length > 2 ? '4px' : '6px' }">
+            {{ child.iconText || child.name || '?' }}
           </span>
         </div>
         <!-- 空格占位 -->
@@ -54,8 +54,8 @@ function handleClick() {
       </div>
     </div>
     <span
-      class="text-[var(--icon-name-size)] truncate max-w-full text-center"
-      :style="{ color: 'var(--icon-name-color)' }"
+      class="truncate max-w-full text-center"
+      :style="{ color: 'var(--icon-name-color)', fontSize: 'var(--icon-name-size)' }"
     >
       {{ icon.name }}
     </span>

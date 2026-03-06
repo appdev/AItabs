@@ -91,6 +91,7 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
     const widgetConflicts: ConflictItem[] = []
     const groupConflicts: ConflictItem[] = []
     let settingsConflict: { serverData: Record<string, unknown>; serverVersion: number } | undefined
+    let newSettingsVersion: number | undefined
 
     // --- icons ---
     for (const item of body.icons ?? []) {
@@ -114,18 +115,20 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
 
       if (!existing) {
         // 首次同步：直接插入，版本从 1 开始
+        newSettingsVersion = 1
         await tx.insert(syncSettings).values({
           userId,
           data: JSON.stringify(body.settings.data),
-          version: 1,
+          version: newSettingsVersion,
           updatedAt: now,
         })
       } else if (body.settings.version === existing.version) {
         // 版本匹配：更新并递增版本
+        newSettingsVersion = existing.version + 1
         await tx.update(syncSettings)
           .set({
             data: JSON.stringify(body.settings.data),
-            version: existing.version + 1,
+            version: newSettingsVersion,
             updatedAt: now,
           })
           .where(eq(syncSettings.userId, userId))
@@ -138,11 +141,12 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
       }
     }
 
-    return { iconConflicts, widgetConflicts, groupConflicts, settingsConflict }
+    return { iconConflicts, widgetConflicts, groupConflicts, settingsConflict, newSettingsVersion }
   })
 
   return {
     ok: true,
+    ...(conflicts.newSettingsVersion !== undefined && { settingsVersion: conflicts.newSettingsVersion }),
     conflicts: {
       ...(conflicts.iconConflicts.length > 0 && { icons: conflicts.iconConflicts }),
       ...(conflicts.widgetConflicts.length > 0 && { widgets: conflicts.widgetConflicts }),

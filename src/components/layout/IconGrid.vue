@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
+import { Icon } from '@iconify/vue'
 import WidgetWrapper from '@/components/widgets/WidgetWrapper.vue'
 import WeatherWidget from '@/components/widgets/WeatherWidget.vue'
 import CalendarWidget from '@/components/widgets/CalendarWidget.vue'
@@ -15,14 +16,20 @@ import { useGridLayout } from '@/composables/useGridLayout'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { useWidgetsStore } from '@/stores/widgets'
 import { useIconsStore } from '@/stores/icons'
+import { useSettingsStore } from '@/stores/settings'
 import type { IconSize } from '@/types/icon'
 import type { Widget } from '@/types/widget'
 import type { SiteIcon } from '@/types/icon'
 
 const widgetsStore = useWidgetsStore()
 const iconsStore = useIconsStore()
+const settingsStore = useSettingsStore()
 const { columnCount, gapY } = useGridLayout()
 const { show: showContextMenu } = useContextMenu()
+
+const emit = defineEmits<{
+  (e: 'add-icon'): void
+}>()
 
 const gridStyle = computed(() => ({
   display: 'grid',
@@ -81,6 +88,7 @@ function handleEmptyContextMenu(e: MouseEvent) {
       :animation="150"
       ghost-class="drag-ghost"
       chosen-class="drag-chosen"
+      filter=".no-drag"
       @end="onDragEnd"
     >
       <div
@@ -110,6 +118,28 @@ function handleEmptyContextMenu(e: MouseEvent) {
         <IconFolder v-else-if="item.data.type === 'folder'" :icon="item.data" />
         <!-- 普通图标 -->
         <IconItem v-else :icon="item.data" />
+      </div>
+
+      <!-- 固定的添加图标按钮 -->
+      <div
+        class="min-w-0 no-drag flex flex-col items-center gap-1 group cursor-pointer"
+        style="grid-column: span 1; grid-row: span 1;"
+        :style="{ opacity: 'var(--icon-opacity)' }"
+        @click="$emit('add-icon')"
+      >
+        <div 
+          class="flex items-center justify-center rounded-[var(--icon-radius)] bg-white/90 hover:bg-white transition-colors flex-shrink-0"
+          style="width: var(--icon-size); height: var(--icon-size);"
+        >
+          <div class="w-10 h-10 rounded-full bg-[#1890ff] flex items-center justify-center">
+            <Icon icon="mdi:plus" class="w-6 h-6 text-white" />
+          </div>
+        </div>
+        <span
+          v-if="settingsStore.settings.icon.nameShow"
+          class="truncate max-w-full text-center"
+          style="color: var(--icon-name-color); font-size: var(--icon-name-size);"
+        >添加图标</span>
       </div>
     </VueDraggable>
   </div>

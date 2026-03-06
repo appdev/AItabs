@@ -98,8 +98,8 @@ const hasChildren = computed(() => (props.icon.children?.length ?? 0) > 0)
                   :alt="child.name"
                   class="w-[60%] h-[60%] object-contain"
                 />
-                <span v-else class="text-white font-bold text-lg select-none">
-                  {{ child.name?.charAt(0).toUpperCase() }}
+                <span v-else class="text-white font-bold text-lg select-none truncate max-w-full px-1" :style="{ fontSize: (child.iconText || child.name).length > 2 ? '12px' : '18px' }">
+                  {{ child.iconText || child.name || '?' }}
                 </span>
               </div>
               <span class="text-[10px] text-gray-600 truncate max-w-full text-center leading-tight">

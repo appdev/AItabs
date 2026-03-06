@@ -15,8 +15,31 @@ const activeEngine = computed(
   () => searchEngines.value.find(e => e.key === activeEngineKey.value) ?? searchEngines.value[0]
 )
 
-function setActiveEngine(key: string) {
+// 从 href 中提取 favicon
+function getFavicon(href: string): string {
+  try {
+    const domain = new URL(href).hostname
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
+  } catch {
+    return ''
+  }
+}
+
+const activeFavicon = computed(() => getFavicon(activeEngine.value?.href ?? ''))
+
+// 聚焦状态（加深搜索框背景）
+const isFocused = ref(false)
+
+// 引擎选择面板
+const showEnginePanel = ref(false)
+
+function toggleEnginePanel() {
+  showEnginePanel.value = !showEnginePanel.value
+}
+
+function selectEngine(key: string) {
   settingsStore.settings.activeEngine = key
+  showEnginePanel.value = false
 }
 
 // Tab 键循环切换搜索引擎
@@ -24,7 +47,7 @@ function cycleEngine() {
   const engines = searchEngines.value
   const idx = engines.findIndex(e => e.key === activeEngineKey.value)
   const next = engines[(idx + 1) % engines.length]
-  if (next) setActiveEngine(next.key)
+  if (next) settingsStore.settings.activeEngine = next.key
 }
 
 // ===== 搜索历史 =====
@@ -60,18 +83,19 @@ function selectHistory(item: string) {
 }
 
 function onInputFocus() {
+  isFocused.value = true
+  showEnginePanel.value = false
   if (searchSettings.value.history && historyList.value.length) {
     showHistory.value = true
   }
 }
 
 function onInputBlur() {
-  // 延迟关闭，让点击历史项的事件先触发
+  isFocused.value = false
   setTimeout(() => { showHistory.value = false }, 200)
 }
 
 // ===== 搜索提交 =====
-// 支持 %s 占位符模板，也支持直接前缀拼接
 function buildUrl(href: string, q: string): string {
   const encoded = encodeURIComponent(q)
   return href.includes('%s') ? href.replace('%s', encoded) : href + encoded
@@ -92,7 +116,15 @@ function handleSubmit(e: Event) {
   showHistory.value = false
 }
 
-// 全局 / 键聚焦搜索框（不在其他输入框中时生效）
+// 点击外部关闭引擎面板
+function onClickOutside(e: MouseEvent) {
+  const el = document.getElementById('search-bar-wrap')
+  if (el && !el.contains(e.target as Node)) {
+    showEnginePanel.value = false
+  }
+}
+
+// 全局 / 键聚焦搜索框
 function onGlobalKeydown(e: KeyboardEvent) {
   const tag = (e.target as HTMLElement).tagName
   if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
@@ -105,33 +137,58 @@ function onGlobalKeydown(e: KeyboardEvent) {
 onMounted(() => {
   loadHistory()
   document.addEventListener('keydown', onGlobalKeydown)
+  document.addEventListener('mousedown', onClickOutside)
 })
-onUnmounted(() => document.removeEventListener('keydown', onGlobalKeydown))
+onUnmounted(() => {
+  document.removeEventListener('keydown', onGlobalKeydown)
+  document.removeEventListener('mousedown', onClickOutside)
+})
 </script>
 
 <template>
   <div
     v-if="searchSettings.show"
-    class="flex flex-col items-center gap-2 w-full max-w-xl mx-auto"
+    id="search-bar-wrap"
+    class="flex flex-col items-center w-full max-w-[600px] mx-auto"
   >
     <!-- 搜索框 -->
     <div class="w-full relative">
       <form
-        class="w-full flex items-center gap-2 px-3 overflow-hidden"
+        class="w-full flex items-center overflow-hidden transition-colors"
         style="backdrop-filter: blur(6px);"
         :style="{
           height: 'var(--search-height)',
           borderRadius: 'var(--search-radius)',
-          background: 'rgba(255,255,255,var(--search-bg-color))',
+          background: isFocused
+            ? 'rgba(255,255,255,0.72)'
+            : 'rgba(255,255,255,var(--search-bg-color))',
         }"
         @submit="handleSubmit"
       >
-        <Icon icon="mdi:magnify" class="w-5 h-5 flex-shrink-0 text-gray-600" aria-hidden="true" />
+        <!-- 左侧：引擎图标 + 下拉箭头，点击展开引擎面板 -->
+        <button
+          type="button"
+          class="flex-shrink-0 flex items-center justify-center gap-0.5 h-full hover:bg-black/5 transition-colors cursor-pointer"
+          style="min-width: 52px; padding: 0 10px;"
+          @click.stop="toggleEnginePanel"
+        >
+          <img
+            v-if="activeFavicon"
+            :src="activeFavicon"
+            :alt="activeEngine?.title"
+            class="w-5 h-5"
+            @error="($event.target as HTMLImageElement).style.display='none'"
+          />
+          <Icon v-else icon="mdi:magnify" class="w-5 h-5 text-gray-500" />
+          <Icon icon="mdi:chevron-down" class="w-3 h-3 text-gray-400 ml-0.5" />
+        </button>
+
+        <!-- 中间：输入框 -->
         <input
           ref="inputEl"
           v-model="query"
           type="search"
-          class="flex-1 min-w-0 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-sm"
+          class="flex-1 min-w-0 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-sm h-full"
           placeholder="输入搜索内容"
           autocomplete="off"
           @focus="onInputFocus"
@@ -139,13 +196,46 @@ onUnmounted(() => document.removeEventListener('keydown', onGlobalKeydown))
           @keydown.tab.prevent="cycleEngine"
           @keydown.esc="($event.target as HTMLInputElement).blur()"
         />
+
+        <!-- 右侧：搜索按钮 -->
         <button
           type="submit"
-          class="flex-shrink-0 px-3 py-1.5 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
+          class="flex-shrink-0 flex items-center justify-center h-full hover:bg-black/5 transition-colors text-gray-500"
+          style="min-width: 46px;"
         >
-          搜索
+          <Icon icon="mdi:magnify" class="w-[22px] h-[22px]" />
         </button>
       </form>
+
+      <!-- 引擎选择面板（点击左侧触发，白色卡片下拉） -->
+      <div
+        v-if="showEnginePanel"
+        class="absolute left-0 right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden shadow-xl py-3 px-3"
+        style="background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);"
+        @click.stop
+      >
+        <div class="flex gap-1">
+          <button
+            v-for="engine in searchEngines"
+            :key="engine.key"
+            type="button"
+            class="flex flex-col items-center gap-1 rounded-xl py-2 transition-colors flex-1"
+            :class="activeEngineKey === engine.key ? 'bg-black/10' : 'hover:bg-black/5'"
+            @click="selectEngine(engine.key)"
+          >
+            <!-- 白色方块背景 + 引擎图标 -->
+            <div class="w-10 h-10 rounded-[10px] bg-white flex items-center justify-center shadow-sm">
+              <img
+                :src="getFavicon(engine.href)"
+                :alt="engine.title"
+                class="w-6 h-6"
+                @error="($event.target as HTMLImageElement).style.display='none'"
+              />
+            </div>
+            <span class="text-xs text-gray-700 leading-none">{{ engine.title }}</span>
+          </button>
+        </div>
+      </div>
 
       <!-- 搜索历史下拉 -->
       <div
@@ -173,24 +263,6 @@ onUnmounted(() => document.removeEventListener('keydown', onGlobalKeydown))
           {{ item }}
         </button>
       </div>
-    </div>
-
-    <!-- 搜索引擎标签 -->
-    <div class="flex flex-wrap gap-1.5">
-      <button
-        v-for="engine in searchEngines"
-        :key="engine.key"
-        type="button"
-        class="px-2.5 py-1 rounded-md text-xs transition-colors"
-        :class="
-          activeEngineKey === engine.key
-            ? 'bg-white/40 text-gray-900 font-medium'
-            : 'bg-white/20 text-white/80 hover:bg-white/30'
-        "
-        @click="setActiveEngine(engine.key)"
-      >
-        {{ engine.title }}
-      </button>
     </div>
   </div>
 </template>

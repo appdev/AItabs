@@ -48,3 +48,14 @@ export const syncSettings = sqliteTable('sync_settings', {
   version: integer('version').notNull().default(0),
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 })
+
+// ---- 网站信息缓存（按 host 去重）----
+export const siteCache = sqliteTable('site_cache', {
+  host: text('host').primaryKey(),
+  name: text('name').notNull().default(''),
+  iconFile: text('icon_file'),          // 本地文件名，如 example.com.png；null 表示无图标
+  bgColor: text('bg_color').notNull().default(''),
+  createdAt: integer('created_at', { mode: 'number' }).notNull().$defaultFn(() => Date.now()),
+  // 上次从上游实际拉取的时间（0 = 旧数据迁移前的默认值，视为需要刷新）
+  updatedAt: integer('updated_at', { mode: 'number' }).notNull().default(0),
+})

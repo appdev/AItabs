@@ -3,13 +3,17 @@ import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { useIconsStore } from '@/stores/icons'
-import { useWidgetsStore } from '@/stores/widgets'
+import { useWidgetsStore, WIDGET_REGISTRY } from '@/stores/widgets'
+import { useEditMode } from '@/composables/useEditMode'
+import { useUndoToast } from '@/composables/useUndoToast'
 import type { IconSize } from '@/types/icon'
 import type { WidgetSize } from '@/types/widget'
 
-const { state, hide, openEditor, openSettings, openWidgetConfig } = useContextMenu()
+const { state, hide, openEditor, openSettings, openAddIcon, openWidgetConfig } = useContextMenu()
 const iconsStore = useIconsStore()
 const widgetsStore = useWidgetsStore()
+const { setEditMode } = useEditMode()
+const { showToast } = useUndoToast()
 
 // icon 和 widget 统一展示 5 个尺寸选项
 const ALL_SIZES = ['1x1', '1x2', '2x1', '2x2', '2x4']
@@ -44,20 +48,29 @@ function changeSize(size: string) {
   hide()
 }
 
-async function deleteItem() {
+function deleteItem() {
   const id = state.value.targetId
   if (!id) return
-  try {
-    await ElMessageBox.confirm('确定要删除吗？', '提示', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning',
+  
+  if (state.value.targetType === 'widget') {
+    const w = widgetsStore.widgets.find(w => w.id === id)
+    const meta = w ? WIDGET_REGISTRY.find(m => m.type === w.type) : null
+    const name = meta ? meta.name : '组件'
+    
+    widgetsStore.removeWidget(id)
+    showToast(`已删除"${name}"`, () => {
+      widgetsStore.restoreWidget(id)
     })
-    if (state.value.targetType === 'widget') widgetsStore.removeWidget(id)
-    else iconsStore.removeIcon(id)
-  } catch {
-    // 用户取消，不做处理
+  } else {
+    const icon = iconsStore.icons.find(i => i.id === id)
+    const name = icon ? (icon.name || '图标') : '图标'
+    
+    iconsStore.removeIcon(id)
+    showToast(`已删除"${name}"`, () => {
+      iconsStore.restoreIcon(id)
+    })
   }
+  
   hide()
 }
 
@@ -73,23 +86,23 @@ const menuStyle = computed(() => {
   <Teleport to="body">
     <div
       v-if="state.visible"
-      class="context-menu fixed z-[999] glass-menu rounded-xl overflow-hidden py-1 w-[168px]"
+      class="context-menu fixed z-[999] glass-menu rounded-xl overflow-hidden py-1 w-[140px]"
       :style="menuStyle"
     >
       <!-- 在新标签页打开（仅 icon） -->
       <button
         v-if="state.targetType === 'icon'"
         type="button"
-        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors"
+        class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-800 hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10 transition-colors"
         @click="openInNewTab"
       >
-        <Icon icon="mdi:open-in-new" class="w-4 h-4 flex-shrink-0" />
-        在新标签页打开
+        <span>在新标签页打开</span>
+        <Icon icon="mdi:open-in-new" class="w-4 h-4 text-gray-400 dark:text-white/70 flex-shrink-0" />
       </button>
 
       <!-- 布局切换（icon / widget 统一 5 个尺寸） -->
       <div v-if="state.targetType !== 'grid'" class="px-3 py-1.5">
-        <p class="text-[11px] text-white/40 mb-1.5">布局</p>
+        <p class="text-[11px] text-gray-500 dark:text-white/40 mb-1.5">布局</p>
         <div class="flex gap-1 flex-wrap">
           <button
             v-for="size in ALL_SIZES"
@@ -98,8 +111,8 @@ const menuStyle = computed(() => {
             class="px-1.5 py-0.5 rounded text-[11px] transition-colors"
             :class="
               currentSize === size
-                ? 'bg-white/30 text-white font-semibold'
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
+                ? 'bg-black/10 text-gray-800 dark:bg-white/30 dark:text-white font-semibold'
+                : 'bg-transparent text-gray-500 hover:bg-black/5 dark:bg-transparent dark:text-white/70 dark:hover:bg-white/20'
             "
             @click="changeSize(size)"
           >
@@ -108,55 +121,96 @@ const menuStyle = computed(() => {
         </div>
       </div>
 
-      <div v-if="state.targetType !== 'grid'" class="h-px bg-white/10 mx-2 my-1" />
+      <div v-if="state.targetType !== 'grid'" class="h-px bg-black/10 dark:bg-white/10 mx-2 my-1" />
 
       <!-- 编辑（仅 icon） -->
       <button
         v-if="state.targetType === 'icon'"
         type="button"
-        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors"
+        class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-800 hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10 transition-colors"
         @click="openEditor"
       >
-        <Icon icon="mdi:pencil-outline" class="w-4 h-4 flex-shrink-0" />
-        编辑图标
+        <span>编辑图标</span>
+        <Icon icon="mdi:pencil-outline" class="w-4 h-4 text-gray-400 dark:text-white/70 flex-shrink-0" />
       </button>
 
       <!-- 设置（仅 widget） -->
       <button
         v-if="state.targetType === 'widget'"
         type="button"
-        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors"
+        class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-800 hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10 transition-colors"
         @click="openWidgetConfig"
       >
-        <Icon icon="mdi:cog-outline" class="w-4 h-4 flex-shrink-0" />
-        设置组件
+        <span>设置组件</span>
+        <Icon icon="mdi:cog-outline" class="w-4 h-4 text-gray-400 dark:text-white/70 flex-shrink-0" />
       </button>
 
       <!-- 编辑主页 -->
       <button
+        v-if="state.targetType !== 'grid'"
         type="button"
-        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/90 hover:bg-white/10 transition-colors"
-        @click="openSettings"
+        class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-800 hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10 transition-colors"
+        @click="() => { setEditMode(true); hide() }"
       >
-        <Icon icon="mdi:home-edit-outline" class="w-4 h-4 flex-shrink-0" />
-        编辑主页
+        <span>编辑主页</span>
+        <Icon icon="mdi:home-edit-outline" class="w-4 h-4 text-gray-400 dark:text-white/70 flex-shrink-0" />
       </button>
 
       <!-- 删除（icon / widget） -->
       <button
         v-if="state.targetType !== 'grid'"
         type="button"
-        class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-white/10 transition-colors"
+        class="w-full flex items-center justify-between px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-white/10 transition-colors"
         @click="deleteItem"
       >
+        <span>删除</span>
         <Icon icon="mdi:delete-outline" class="w-4 h-4 flex-shrink-0" />
-        删除
       </button>
 
       <!-- 空白区域右键 -->
-      <div v-if="state.targetType === 'grid'" class="px-3 py-2 text-white/40 text-xs text-center">
-        右键空白区域
-      </div>
+      <template v-if="state.targetType === 'grid'">
+        <!-- 添加图标 -->
+        <button
+          type="button"
+          class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-800 hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10 transition-colors"
+          @click="openAddIcon"
+        >
+          <span>添加图标</span>
+          <Icon icon="mdi:plus" class="w-4 h-4 text-gray-400 dark:text-white/70" />
+        </button>
+
+        <!-- 编辑主页 -->
+        <button
+          type="button"
+          class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-800 hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10 transition-colors"
+          @click="() => { setEditMode(true); hide() }"
+        >
+          <span>编辑主页</span>
+          <Icon icon="mdi:pencil-outline" class="w-4 h-4 text-gray-400 dark:text-white/70" />
+        </button>
+
+        <!-- 修改壁纸 -->
+        <button
+          type="button"
+          class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-800 hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10 transition-colors"
+          @click="openSettings('wallpaper')"
+        >
+          <span>修改壁纸</span>
+          <Icon icon="mdi:image-outline" class="w-4 h-4 text-gray-400 dark:text-white/70" />
+        </button>
+
+        <div class="h-px bg-black/10 dark:bg-white/10 mx-2 my-1" />
+
+        <!-- 设置 -->
+        <button
+          type="button"
+          class="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-800 hover:bg-black/5 dark:text-white/90 dark:hover:bg-white/10 transition-colors"
+          @click="openSettings('')"
+        >
+          <span>设置</span>
+          <Icon icon="mdi:cog-outline" class="w-4 h-4 text-gray-400 dark:text-white/70" />
+        </button>
+      </template>
     </div>
   </Teleport>
 </template>

@@ -138,7 +138,7 @@ function handleClick(title: string) {
 </script>
 
 <template>
-  <div class="w-full h-full bg-white/85 backdrop-blur-sm flex flex-col overflow-hidden select-none">
+  <div class="w-full h-full glass-card flex flex-col overflow-hidden select-none">
 
     <!-- 顶部标签栏 -->
     <div class="flex items-center gap-0.5 px-2 pt-2 pb-1 flex-shrink-0">
@@ -148,7 +148,7 @@ function handleClick(title: string) {
         type="button"
         class="px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors"
         :style="active === tab.key ? { backgroundColor: tab.color, color: '#fff' } : {}"
-        :class="active !== tab.key ? 'text-gray-500 hover:bg-gray-100' : ''"
+        :class="active !== tab.key ? 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10' : ''"
         @click="active = tab.key"
       >
         {{ tab.label }}
@@ -161,7 +161,7 @@ function handleClick(title: string) {
         v-for="(item, idx) in lists[active]"
         :key="idx"
         type="button"
-        class="w-full flex items-center gap-1.5 py-[3px] text-left hover:bg-gray-50 rounded transition-colors group"
+        class="w-full flex items-center gap-1.5 py-[3px] text-left hover:bg-gray-50 dark:hover:bg-white/10 rounded transition-colors group"
         @click="handleClick(item.title)"
       >
         <span
@@ -170,10 +170,10 @@ function handleClick(title: string) {
         >
           {{ idx + 1 }}
         </span>
-        <span class="flex-1 text-[11px] text-gray-700 truncate group-hover:text-blue-600 transition-colors">
+        <span class="flex-1 text-[11px] text-gray-700 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           {{ item.title }}
         </span>
-        <span class="text-[10px] text-gray-400 flex-shrink-0">{{ item.heat }}</span>
+        <span class="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0">{{ item.heat }}</span>
       </button>
     </div>
 

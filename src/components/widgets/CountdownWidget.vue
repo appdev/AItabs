@@ -82,14 +82,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="w-full h-full flex bg-gradient-to-br from-rose-100/90 via-pink-50/80 to-amber-50/70 p-3 gap-3">
+  <div class="w-full h-full glass-card flex p-3 gap-3">
 
     <!-- 左侧：倒计时 + 猫咪（约 60%） -->
     <div class="flex-1 flex flex-col justify-between min-w-0">
       <div>
-        <div class="text-xs text-gray-500 mb-1">下班还有</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">下班还有</div>
         <div
-          class="font-mono font-light text-gray-800 tabular-nums"
+          class="font-mono font-light text-gray-800 dark:text-gray-100 tabular-nums"
           style="font-size: clamp(1.4rem, 3.5vw, 2rem)"
         >
           {{ countdown }}
@@ -102,19 +102,19 @@ onUnmounted(() => {
     <!-- 右侧：3 个迷你卡片（约 40%） -->
     <div class="flex flex-col gap-1.5 justify-center w-[40%] flex-shrink-0">
       <!-- 发薪日 -->
-      <div class="px-2 py-1.5 rounded-lg bg-white/60 backdrop-blur-sm">
-        <div class="text-gray-400 text-[10px] leading-none mb-0.5">发薪</div>
-        <div class="text-gray-800 text-xs font-medium">{{ payDays }} 天</div>
+      <div class="px-2 py-1.5 rounded-lg bg-black/5 dark:bg-white/10">
+        <div class="text-gray-500 dark:text-gray-400 text-[10px] leading-none mb-0.5">发薪</div>
+        <div class="text-gray-800 dark:text-gray-200 text-xs font-medium">{{ payDays }} 天</div>
       </div>
       <!-- 节日倒计时 -->
-      <div class="px-2 py-1.5 rounded-lg bg-white/60 backdrop-blur-sm">
-        <div class="text-gray-400 text-[10px] leading-none mb-0.5">{{ nextHoliday.name }}</div>
-        <div class="text-gray-800 text-xs font-medium">{{ nextHoliday.days }} 天</div>
+      <div class="px-2 py-1.5 rounded-lg bg-black/5 dark:bg-white/10">
+        <div class="text-gray-500 dark:text-gray-400 text-[10px] leading-none mb-0.5">{{ nextHoliday.name }}</div>
+        <div class="text-gray-800 dark:text-gray-200 text-xs font-medium">{{ nextHoliday.days }} 天</div>
       </div>
       <!-- 今日收入 -->
-      <div class="px-2 py-1.5 rounded-lg bg-white/60 backdrop-blur-sm">
-        <div class="text-gray-400 text-[10px] leading-none mb-0.5">今天赚了</div>
-        <div class="text-emerald-600 text-xs font-medium">¥{{ todayEarnings }}</div>
+      <div class="px-2 py-1.5 rounded-lg bg-black/5 dark:bg-white/10">
+        <div class="text-gray-500 dark:text-gray-400 text-[10px] leading-none mb-0.5">今天赚了</div>
+        <div class="text-emerald-600 dark:text-emerald-400 text-xs font-medium">¥{{ todayEarnings }}</div>
       </div>
     </div>
 

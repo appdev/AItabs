@@ -5,12 +5,14 @@ import { useSettingsStore } from '@/stores/settings'
 import { useWallpaper } from '@/composables/useWallpaper'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { useAuth } from '@/composables/useAuth'
+import { useEditMode } from '@/composables/useEditMode'
 import { initAutoSync, connectSSE, pull } from '@/services/syncManager'
 import Header from '@/components/layout/Header.vue'
 import SearchBar from '@/components/layout/SearchBar.vue'
 import IconGrid from '@/components/layout/IconGrid.vue'
 import FooterQuote from '@/components/layout/FooterQuote.vue'
 import ContextMenu from '@/components/contextmenu/ContextMenu.vue'
+import UndoToast from '@/components/common/UndoToast.vue'
 
 // 弹窗类组件按需加载，减少首屏包体积
 const SettingsDialog = defineAsyncComponent(() => import('@/components/dialogs/SettingsDialog.vue'))
@@ -19,8 +21,9 @@ const WidgetConfigDialog = defineAsyncComponent(() => import('@/components/dialo
 
 const settingsStore = useSettingsStore()
 const { activeSrc, wallpaperOpacity } = useWallpaper()
-const { showSettingsFromMenu, showEditIcon, editIconId } = useContextMenu()
+const { showSettingsFromMenu, showAddIconFromMenu, showEditIcon, editIconId } = useContextMenu()
 const { isLoggedIn, checkSession } = useAuth()
+const { setEditMode } = useEditMode()
 
 const showSettings = ref(false)
 const showAdd = ref(false)
@@ -40,6 +43,15 @@ watch(showEditIcon, (val) => {
     addTab.value = 'custom'
     showAdd.value = true
     showEditIcon.value = false
+  }
+})
+
+watch(showAddIconFromMenu, (val) => {
+  if (val) {
+    currentEditIconId.value = ''
+    addTab.value = 'custom'
+    showAdd.value = true
+    showAddIconFromMenu.value = false
   }
 })
 
@@ -71,7 +83,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div id="aitabs-app" class="relative w-full h-full overflow-hidden">
+  <div id="aitabs-app" class="relative w-full h-full overflow-hidden" @click="setEditMode(false)">
 
     <!-- 壁纸层 1：背景图（预加载完成后淡入） -->
     <div
@@ -101,7 +113,7 @@ onMounted(async () => {
     <!-- 右上角设置按钮 -->
     <button
       type="button"
-      class="fixed top-4 right-4 z-[50] w-9 h-9 flex items-center justify-center rounded-full glass-card text-gray-600 hover:text-gray-900 hover:bg-white/70 transition-colors"
+      class="fixed top-4 right-4 z-[50] w-9 h-9 flex items-center justify-center rounded-full glass-card text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-black/30 transition-colors"
       aria-label="设置"
       @click="showSettings = true"
     >
@@ -109,8 +121,8 @@ onMounted(async () => {
     </button>
 
     <!-- 主内容区 -->
-    <main class="h-full flex flex-col items-center overflow-y-auto">
-      <div class="w-full flex flex-col items-center pt-8 pb-20 min-h-full">
+    <main class="h-full flex flex-col items-center overflow-y-auto" @click.self="setEditMode(false)">
+      <div class="w-full flex flex-col items-center pt-8 pb-20 min-h-full" @click.self="setEditMode(false)">
         <Header />
         <SearchBar class="w-full max-w-xl px-4 mt-2" />
         <IconGrid class="mt-6 px-4 w-full" @add-icon="openAdd('custom')" />
@@ -120,6 +132,7 @@ onMounted(async () => {
     <FooterQuote v-if="layout.yiyan" />
 
     <ContextMenu />
+    <UndoToast />
 
     <SettingsDialog v-model:visible="showSettings" />
     <AddDialog v-model:visible="showAdd" :active-tab="addTab" :edit-icon-id="currentEditIconId" />

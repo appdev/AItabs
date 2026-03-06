@@ -54,6 +54,15 @@ export const useIconsStore = defineStore('icons', () => {
     icon.dirty = true
   }
 
+  function restoreIcon(id: string) {
+    const icon = icons.value.find(i => i.id === id)
+    if (icon) {
+      delete icon.deletedAt
+      icon.updatedAt = Date.now()
+      icon.dirty = true
+    }
+  }
+
   function updateIcon(id: string, updates: Partial<SiteIcon>) {
     const icon = icons.value.find(i => i.id === id)
     if (icon) {
@@ -124,7 +133,7 @@ export const useIconsStore = defineStore('icons', () => {
 
   return {
     icons, currentIcons,
-    addIcon, removeIcon, updateIcon, updateIconSize, reorderIcons, resetIcons,
+    addIcon, removeIcon, restoreIcon, updateIcon, updateIconSize, reorderIcons, resetIcons,
     getDirtyIcons, applyRemoteItem, applyRemoteChanges, clearDirty,
   }
 }, {

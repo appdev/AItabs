@@ -24,16 +24,16 @@ function saveDebounced(val: string) {
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col overflow-hidden">
-    <!-- 标题栏：绿色渐变 -->
-    <div class="bg-gradient-to-r from-emerald-500 to-green-400 px-3 py-1.5 flex-shrink-0">
+  <div class="w-full h-full glass-card flex flex-col overflow-hidden">
+    <!-- 标题栏：黄色渐变 -->
+    <div class="bg-gradient-to-r from-yellow-400 to-amber-500 dark:from-yellow-500 dark:to-amber-600 px-3 py-1.5 flex-shrink-0">
       <span class="text-white text-xs font-medium">备忘录</span>
     </div>
 
-    <!-- 编辑区：白色文字，深色半透明背景 -->
+    <!-- 编辑区：自适应文字，透明背景 -->
     <textarea
       v-model="content"
-      class="flex-1 w-full resize-none bg-gray-800/80 text-white text-xs leading-relaxed p-2 outline-none placeholder-white/30"
+      class="flex-1 w-full resize-none bg-transparent text-gray-800 dark:text-white text-xs leading-relaxed p-2 outline-none placeholder-gray-400 dark:placeholder-gray-500"
       placeholder="点击输入备忘内容..."
       spellcheck="false"
     />

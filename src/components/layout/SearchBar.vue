@@ -160,15 +160,15 @@ onUnmounted(() => {
           height: 'var(--search-height)',
           borderRadius: 'var(--search-radius)',
           background: isFocused
-            ? 'rgba(255,255,255,0.72)'
-            : 'rgba(255,255,255,var(--search-bg-color))',
+            ? 'rgba(var(--search-bg-rgb), var(--search-bg-focused-opacity))'
+            : 'rgba(var(--search-bg-rgb), var(--search-bg-opacity))',
         }"
         @submit="handleSubmit"
       >
         <!-- 左侧：引擎图标 + 下拉箭头，点击展开引擎面板 -->
         <button
           type="button"
-          class="flex-shrink-0 flex items-center justify-center gap-0.5 h-full hover:bg-black/5 transition-colors cursor-pointer"
+          class="flex-shrink-0 flex items-center justify-center gap-0.5 h-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
           style="min-width: 52px; padding: 0 10px;"
           @click.stop="toggleEnginePanel"
         >
@@ -179,7 +179,7 @@ onUnmounted(() => {
             class="w-5 h-5"
             @error="($event.target as HTMLImageElement).style.display='none'"
           />
-          <Icon v-else icon="mdi:magnify" class="w-5 h-5 text-gray-500" />
+          <Icon v-else icon="mdi:magnify" class="w-5 h-5 text-gray-500 dark:text-gray-300" />
           <Icon icon="mdi:chevron-down" class="w-3 h-3 text-gray-400 ml-0.5" />
         </button>
 
@@ -188,7 +188,7 @@ onUnmounted(() => {
           ref="inputEl"
           v-model="query"
           type="search"
-          class="flex-1 min-w-0 bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-sm h-full"
+          class="flex-1 min-w-0 bg-transparent border-none outline-none text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm h-full"
           placeholder="输入搜索内容"
           autocomplete="off"
           @focus="onInputFocus"
@@ -200,7 +200,7 @@ onUnmounted(() => {
         <!-- 右侧：搜索按钮 -->
         <button
           type="submit"
-          class="flex-shrink-0 flex items-center justify-center h-full hover:bg-black/5 transition-colors text-gray-500"
+          class="flex-shrink-0 flex items-center justify-center h-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-gray-500 dark:text-gray-300"
           style="min-width: 46px;"
         >
           <Icon icon="mdi:magnify" class="w-[22px] h-[22px]" />
@@ -210,8 +210,7 @@ onUnmounted(() => {
       <!-- 引擎选择面板（点击左侧触发，白色卡片下拉） -->
       <div
         v-if="showEnginePanel"
-        class="absolute left-0 right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden shadow-xl py-3 px-3"
-        style="background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);"
+        class="absolute left-0 right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden shadow-xl py-3 px-3 glass-search-engine"
         @click.stop
       >
         <div class="flex gap-1">
@@ -220,7 +219,7 @@ onUnmounted(() => {
             :key="engine.key"
             type="button"
             class="flex flex-col items-center gap-1 rounded-xl py-2 transition-colors flex-1"
-            :class="activeEngineKey === engine.key ? 'bg-black/10' : 'hover:bg-black/5'"
+            :class="activeEngineKey === engine.key ? 'bg-black/10 dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/5'"
             @click="selectEngine(engine.key)"
           >
             <!-- 白色方块背景 + 引擎图标 -->
@@ -232,7 +231,7 @@ onUnmounted(() => {
                 @error="($event.target as HTMLImageElement).style.display='none'"
               />
             </div>
-            <span class="text-xs text-gray-700 leading-none">{{ engine.title }}</span>
+            <span class="text-xs text-gray-700 dark:text-gray-300 leading-none">{{ engine.title }}</span>
           </button>
         </div>
       </div>

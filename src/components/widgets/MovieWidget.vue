@@ -71,8 +71,7 @@ const posterFailed = ref(false)
 
 <template>
   <div
-    class="w-full h-full relative overflow-hidden flex flex-col select-none"
-    :class="posterFailed ? `bg-gradient-to-br ${movie.fallbackGradient}` : 'bg-gray-900'"
+    class="w-full h-full relative overflow-hidden flex flex-col select-none glass-card"
   >
     <!-- 海报背景（background-image cover） -->
     <div
@@ -90,23 +89,23 @@ const posterFailed = ref(false)
     </div>
 
     <!-- 从底部到中部的渐变遮罩 -->
-    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+    <div v-if="!posterFailed" class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
     <!-- 左上角：日期 -->
     <div class="relative z-10 p-2.5">
-      <div class="text-white text-xl font-bold leading-none drop-shadow">{{ dateNum }}</div>
-      <div class="text-white/70 text-[10px] mt-0.5 drop-shadow">{{ monthWeek }}</div>
+      <div class="text-xl font-bold leading-none drop-shadow" :class="posterFailed ? 'text-gray-800 dark:text-white' : 'text-white'">{{ dateNum }}</div>
+      <div class="text-[10px] mt-0.5 drop-shadow" :class="posterFailed ? 'text-gray-500 dark:text-gray-400' : 'text-white/70'">{{ monthWeek }}</div>
     </div>
 
     <!-- 底部：电影信息 -->
     <div class="relative z-10 mt-auto p-2.5 space-y-1">
       <div class="flex items-center gap-1.5">
-        <span class="text-white text-xs font-semibold truncate drop-shadow">{{ movie.title }}</span>
-        <span class="flex-shrink-0 text-yellow-400 text-[10px] bg-black/40 rounded px-1 py-0.5">
+        <span class="text-xs font-semibold truncate drop-shadow" :class="posterFailed ? 'text-gray-800 dark:text-white' : 'text-white'">{{ movie.title }}</span>
+        <span class="flex-shrink-0 text-[10px] rounded px-1 py-0.5" :class="posterFailed ? 'text-yellow-600 dark:text-yellow-400 bg-black/5 dark:bg-white/10' : 'text-yellow-400 bg-black/40'">
           ★ {{ movie.rating }}
         </span>
       </div>
-      <p class="text-white/70 text-[10px] leading-tight line-clamp-2 drop-shadow">{{ movie.quote }}</p>
+      <p class="text-[10px] leading-tight line-clamp-2 drop-shadow" :class="posterFailed ? 'text-gray-500 dark:text-gray-400' : 'text-white/70'">{{ movie.quote }}</p>
     </div>
   </div>
 </template>

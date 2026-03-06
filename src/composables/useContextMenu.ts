@@ -20,6 +20,8 @@ const state = ref<ContextMenuState>({
 const showIconEditor = ref(false)
 const editingIconId = ref('')
 const showSettingsFromMenu = ref(false)
+const showAddIconFromMenu = ref(false)
+const activeSettingsMenu = ref<string>('') // 用于控制打开设置时的默认激活面板
 // 编辑图标：复用 AddDialog（custom tab）
 const showEditIcon = ref(false)
 const editIconId = ref('')
@@ -51,9 +53,15 @@ export function useContextMenu() {
     showEditIcon.value = true
   }
 
-  function openSettings() {
+  function openSettings(activeMenu = '') {
     hide()
+    activeSettingsMenu.value = activeMenu
     showSettingsFromMenu.value = true
+  }
+  
+  function openAddIcon() {
+    hide()
+    showAddIconFromMenu.value = true
   }
 
   function openWidgetConfig() {
@@ -83,5 +91,5 @@ export function useContextMenu() {
     document.removeEventListener('keydown', onKeydown)
   })
 
-  return { state, show, hide, openEditor, openSettings, openWidgetConfig, showIconEditor, editingIconId, showSettingsFromMenu, showWidgetConfig, configuringWidgetId, showEditIcon, editIconId }
+  return { state, show, hide, openEditor, openSettings, openAddIcon, openWidgetConfig, showIconEditor, editingIconId, showSettingsFromMenu, activeSettingsMenu, showAddIconFromMenu, showWidgetConfig, configuringWidgetId, showEditIcon, editIconId }
 }

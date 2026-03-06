@@ -28,27 +28,6 @@ export default defineConfig({
         // 运行时缓存策略
         runtimeCaching: [
           {
-            // CDN 图标/图片：优先读缓存，过期后后台刷新（30天）
-            urlPattern: /^https:\/\/files\.codelife\.cc\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'codelife-cdn',
-              expiration: {
-                maxEntries: 200,
-                maxAgeSeconds: 60 * 60 * 24 * 30,
-              },
-            },
-          },
-          {
-            // 网站图标 API：网络优先，失败时用缓存兜底
-            urlPattern: /^https:\/\/api\.codelife\.cc\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
-            },
-          },
-          {
             // Bing 每日壁纸图片：缓存优先，每天刷新
             urlPattern: /^https:\/\/cn\.bing\.com\//i,
             handler: 'CacheFirst',
@@ -98,15 +77,6 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/codelife-api': {
-        target: 'https://api.codelife.cc',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/codelife-api/, ''),
-        headers: {
-          Referer: 'https://itab.link/',
-          Origin: 'https://itab.link'
-        }
-      },
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,

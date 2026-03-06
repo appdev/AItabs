@@ -31,24 +31,24 @@ const formattedDays = computed(() => days.value.toLocaleString('zh-CN'))
 </script>
 
 <template>
-  <div class="w-full h-full bg-gradient-to-br from-violet-400 to-purple-500 p-3 flex flex-col select-none">
+  <div class="w-full h-full glass-card p-3 flex flex-col select-none text-gray-800 dark:text-white">
 
     <!-- 标题 -->
-    <div class="text-white/80 text-xs leading-tight">{{ config.title }}</div>
+    <div class="text-gray-600 dark:text-gray-300 text-xs leading-tight">{{ config.title }}</div>
 
     <!-- 天数大字 -->
     <div class="flex-1 flex items-center gap-1">
       <span
-        class="text-white font-bold leading-none tabular-nums"
+        class="font-bold leading-none tabular-nums"
         style="font-size: clamp(2rem, 4vw, 2.5rem)"
       >
         {{ formattedDays }}
       </span>
-      <span class="text-white/70 text-base self-end mb-0.5">天</span>
+      <span class="text-gray-500 dark:text-gray-400 text-base self-end mb-0.5">天</span>
     </div>
 
     <!-- 起始日期 -->
-    <div class="text-white/50 text-[10px]">自 {{ config.startDate }}</div>
+    <div class="text-gray-400 dark:text-gray-500 text-[10px]">自 {{ config.startDate }}</div>
 
   </div>
 </template>

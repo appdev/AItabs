@@ -34,6 +34,7 @@ const form = ref({
 })
 
 const fetching = ref(false)
+const forceRefreshing = ref(false)
 
 // 每次打开弹窗时从 store 同步最新数据
 watch(() => props.iconId, (id) => {
@@ -64,6 +65,27 @@ async function fetchInfo() {
     }
   } catch { /* 获取失败静默处理 */ }
   fetching.value = false
+}
+
+async function forceRefresh() {
+  if (!form.value.url) return
+  forceRefreshing.value = true
+  try {
+    const res = await fetchSiteInfo(form.value.url, true)
+    if (res.code === 200 && res.data) {
+      if (res.data.name) form.value.name = res.data.name
+      const iconUrl = res.data.imgSrc || res.data.src || ''
+      if (iconUrl) { form.value.icon = iconUrl; form.value.source = 'url' }
+      if (res.data.backgroundColor) form.value.bgColor = res.data.backgroundColor
+      ElMessage.success('图标已更新')
+    } else {
+      ElMessage.warning('未获取到新数据')
+    }
+  } catch {
+    ElMessage.error('刷新失败，请稍后重试')
+  } finally {
+    forceRefreshing.value = false
+  }
 }
 
 function uploadIcon() {
@@ -173,6 +195,7 @@ const previewText = computed(() => {
               <div class="flex gap-2">
                 <ElInput v-model="form.url" placeholder="网站地址" size="small" class="flex-1" />
                 <ElButton size="small" :loading="fetching" @click="fetchInfo">获取</ElButton>
+                <ElButton type="warning" size="small" :loading="forceRefreshing" :disabled="!form.url" @click="forceRefresh">强制刷新</ElButton>
               </div>
 
               <!-- 名称 -->

@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @import './glass.css';
 
+/* 启用基于 .dark class 的深色模式，让 dark: 前缀工具类生效 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --wall-blur: 0px;
   --wall-mask: 0;
@@ -19,6 +22,12 @@
   --search-height: 46px;
   --search-radius: 23px;
   --search-bg-color: 0.5;
+  --search-bg-rgb: 255, 255, 255;
+  --search-bg-opacity: var(--search-bg-color);
+  --search-bg-focused-opacity: 0.72;
+  --search-text-color: #1f2937; /* gray-800 */
+  --search-placeholder-color: #6b7280; /* gray-500 */
+  --search-icon-color: #6b7280;
 
   --time-size: 70px;
   --time-color: #fff;
@@ -27,6 +36,15 @@
 
   --img-bg: 38, 64, 85;
   --img-text: 233, 233, 233;
+}
+
+.dark {
+  --search-bg-rgb: 0, 0, 0;
+  --search-bg-opacity: calc(var(--search-bg-color) + 0.1);
+  --search-bg-focused-opacity: calc(var(--search-bg-color) + 0.3);
+  --search-text-color: #f3f4f6; /* gray-100 */
+  --search-placeholder-color: #9ca3af; /* gray-400 */
+  --search-icon-color: #9ca3af;
 }
 
 html,
@@ -81,4 +99,115 @@ body {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
   border-radius: var(--icon-radius);
   z-index: 10;
+}
+
+/* ====== 设置弹窗深色模式 ====== */
+.dark .settings-panel nav {
+  border-right-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+.dark .settings-panel .s-row {
+  color: rgba(255, 255, 255, 0.82);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.dark .settings-panel .s-slider {
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.dark .settings-panel .s-slider-label {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.dark .settings-panel .val {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.dark .settings-panel .s-color {
+  color: rgba(255, 255, 255, 0.82);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.dark .settings-panel .s-btngroup {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark .settings-panel .s-btngroup button {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.dark .settings-panel .s-btngroup button:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark .settings-panel .s-btngroup button.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.dark .settings-panel .s-input {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.dark .settings-panel .s-input::placeholder {
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.dark .settings-panel .s-input:focus {
+  border-color: rgba(96, 165, 250, 0.6);
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.dark .settings-panel .s-action-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.dark .settings-panel .s-action-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.dark .settings-panel .s-action-btn.danger {
+  color: #f87171;
+}
+
+.dark .settings-panel .s-action-btn.danger:hover {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+/* 设置面板左侧导航深色模式（对照源站: text=#dfdddd, active-bg=rgba(24,144,255,0.1)） */
+.dark .settings-panel nav button {
+  color: rgba(223, 221, 221, 0.7);
+}
+
+.dark .settings-panel nav button:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(223, 221, 221, 1);
+}
+
+/* 浅色：active 深色文字 + 浅黑背景 */
+.settings-panel nav button.settings-nav-active {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+/* 深色：active 白色文字 + 蓝色浅背景（对照源站） */
+.dark .settings-panel nav button.settings-nav-active {
+  background: rgba(24, 144, 255, 0.12);
+  color: rgba(223, 221, 221, 1);
+}
+
+/* 编辑模式下的抖动动画 */
+@keyframes edit-shake {
+  0% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+  100% { transform: rotate(-1deg); }
+}
+
+.edit-shake {
+  animation: edit-shake 0.3s infinite;
+  transform-origin: 50% 50%;
 }

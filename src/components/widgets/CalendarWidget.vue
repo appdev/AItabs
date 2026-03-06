@@ -29,7 +29,7 @@ const WEEK_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', 
 </script>
 
 <template>
-  <div class="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500 p-3 flex flex-col select-none">
+  <div class="w-full h-full glass-card p-3 flex flex-col select-none text-gray-800 dark:text-white">
 
     <!-- 顶部：年月橙色徽章 -->
     <div>
@@ -40,19 +40,19 @@ const WEEK_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', 
 
     <!-- 中间：大号日期 -->
     <div class="flex-1 flex items-center">
-      <span class="text-white font-bold leading-none" style="font-size: clamp(2.5rem, 5vw, 3.5rem)">
+      <span class="font-bold leading-none" style="font-size: clamp(2.5rem, 5vw, 3.5rem)">
         {{ now.date() }}
       </span>
     </div>
 
     <!-- 底部：周次 / 农历 / 星期 -->
     <div class="space-y-0.5">
-      <div class="text-white/70 text-[10px]">
+      <div class="text-gray-500 dark:text-gray-400 text-[10px]">
         第 {{ now.isoWeek() }} 周 &nbsp;·&nbsp; 第 {{ now.dayOfYear() }} 天
       </div>
-      <div class="flex items-center gap-1.5 text-white/90 text-[11px]">
+      <div class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 text-[11px]">
         <span>{{ lunarStr }}</span>
-        <span class="text-white/40">·</span>
+        <span class="text-gray-400 dark:text-gray-500">·</span>
         <span>{{ WEEK_NAMES[now.day()] }}</span>
       </div>
     </div>

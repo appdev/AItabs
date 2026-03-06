@@ -11,6 +11,7 @@ import { db } from '@/services/db'
 import { applyWallpaper } from '@/composables/useWallpaper'
 import { useAuth } from '@/composables/useAuth'
 import { push, pull, fullSync, connectSSE, disconnectSSE, syncing, lastSyncTime } from '@/services/syncManager'
+import { useContextMenu } from '@/composables/useContextMenu'
 
 defineProps<{ visible: boolean }>()
 const emit = defineEmits<{ 'update:visible': [val: boolean] }>()
@@ -20,11 +21,20 @@ const groupsStore = useGroupsStore()
 const iconsStore = useIconsStore()
 const widgetsStore = useWidgetsStore()
 const { username, isLoggedIn, login, register, logout } = useAuth()
+const { activeSettingsMenu } = useContextMenu()
 
 // 直接取响应式对象，修改后自动触发 CSS 更新和持久化
 const settings = settingsStore.settings
 
 const activeMenu = ref('search')
+
+watch(activeSettingsMenu, (val) => {
+  if (val) {
+    activeMenu.value = val
+  } else {
+    activeMenu.value = 'search'
+  }
+}, { immediate: true })
 
 const MENUS = [
   { key: 'search',    label: '搜索栏',    icon: 'mdi:magnify' },
@@ -232,7 +242,7 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
     <Transition name="settings-slide">
       <div
         v-if="visible"
-        class="fixed top-0 right-0 bottom-0 z-[100] flex shadow-2xl"
+        class="settings-panel fixed top-0 right-0 bottom-0 z-[100] flex shadow-2xl"
         style="width: 450px;"
       >
         <!-- 左侧菜单导航 -->
@@ -245,7 +255,7 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
             :key="menu.key"
             type="button"
             class="flex flex-col items-center gap-1 p-2 rounded-lg transition-colors text-center"
-            :class="activeMenu === menu.key ? 'bg-black/8 text-gray-800' : 'text-gray-500 hover:bg-black/5 hover:text-gray-800'"
+            :class="activeMenu === menu.key ? 'settings-nav-active bg-black/8' : 'hover:bg-black/5'"
             @click="activeMenu = menu.key"
           >
             <Icon :icon="menu.icon" class="w-5 h-5" />
@@ -256,13 +266,13 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
         <!-- 右侧内容区 -->
         <div class="flex-1 glass-dialog flex flex-col overflow-hidden">
           <!-- 顶部标题栏 -->
-          <div class="flex items-center justify-between px-4 py-3 border-b border-black/8 flex-shrink-0">
-            <h2 class="text-gray-800 text-sm font-medium">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-black/8 dark:border-white/10 flex-shrink-0">
+            <h2 class="text-gray-800 dark:text-white text-sm font-medium">
               {{ MENUS.find(m => m.key === activeMenu)?.label }}
             </h2>
             <button
               type="button"
-              class="text-gray-400 hover:text-gray-700 transition-colors"
+              class="text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white transition-colors"
               @click="emit('update:visible', false)"
             >
               <Icon icon="mdi:close" class="w-5 h-5" />
@@ -302,14 +312,14 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
               </div>
 
               <!-- 搜索引擎管理 -->
-              <div class="py-2 border-b border-black/5">
-                <span class="text-gray-600 text-xs block mb-2">搜索引擎</span>
+              <div class="py-2 border-b border-black/5 dark:border-white/8">
+                <span class="text-gray-600 dark:text-gray-300 text-xs block mb-2">搜索引擎</span>
                 <VueDraggable v-model="settings.searchEngines" :animation="150" handle=".drag-handle">
                   <div
                     v-for="engine in settings.searchEngines"
                     :key="engine.key"
                     class="flex items-center gap-1.5 py-1.5 px-2 rounded-lg transition-colors"
-                    :class="settings.activeEngine === engine.key ? 'bg-black/5' : ''"
+                    :class="settings.activeEngine === engine.key ? 'bg-black/5 dark:bg-white/8' : ''"
                   >
                     <Icon icon="mdi:drag-vertical" class="drag-handle w-3.5 h-3.5 text-gray-400 cursor-grab flex-shrink-0" />
                     <span
@@ -514,8 +524,8 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
                 </div>
                 <ElSlider v-model="settings.wallpaper.blur" :min="0" :max="30" :show-tooltip="false" />
               </div>
-              <div class="py-2 border-b border-black/5">
-                <span class="text-gray-600 text-xs block mb-2">壁纸来源</span>
+              <div class="py-2 border-b border-black/5 dark:border-white/8">
+                <span class="text-gray-600 dark:text-gray-300 text-xs block mb-2">壁纸来源</span>
                 <div class="s-btngroup w-full">
                   <button class="flex-1" :class="{ active: settings.wallpaper.type === 'default' }" @click="settings.wallpaper.type = 'default'; settings.wallpaper.src = 'https://files.codelife.cc/itab/defaultWallpaper/defaultWallpaper.webp'">默认</button>
                   <button class="flex-1" :class="{ active: settings.wallpaper.type === 'bing' }" @click="settings.wallpaper.type = 'bing'">Bing 每日</button>
@@ -603,7 +613,7 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
                   <div class="flex items-center gap-2">
                     <Icon icon="mdi:account-circle-outline" class="w-5 h-5 text-blue-500 flex-shrink-0" />
                     <div>
-                      <p class="text-gray-700 text-xs font-medium">已登录：{{ username }}</p>
+                      <p class="text-gray-700 dark:text-gray-200 text-xs font-medium">已登录：{{ username }}</p>
                       <p class="text-gray-400 text-[10px] mt-0.5">上次同步：{{ formatSyncTime(lastSyncTime) }}</p>
                     </div>
                     <div v-if="syncing" class="ml-auto">
@@ -632,15 +642,15 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
 
             <!-- ===== 备份恢复面板 ===== -->
             <template v-else-if="activeMenu === 'backup'">
-              <div class="py-3 border-b border-black/5">
-                <p class="text-gray-500 text-xs mb-3 leading-relaxed">将所有设置、图标、分组、组件数据导出为 JSON 文件。</p>
+              <div class="py-3 border-b border-black/5 dark:border-white/8">
+                <p class="text-gray-500 dark:text-gray-400 text-xs mb-3 leading-relaxed">将所有设置、图标、分组、组件数据导出为 JSON 文件。</p>
                 <button type="button" class="s-action-btn" @click="exportData">
                   <Icon icon="mdi:download-outline" class="w-4 h-4" />
                   导出数据
                 </button>
               </div>
               <div class="py-3">
-                <p class="text-gray-500 text-xs mb-3 leading-relaxed">从备份文件导入，将覆盖当前所有设置和数据。</p>
+                <p class="text-gray-500 dark:text-gray-400 text-xs mb-3 leading-relaxed">从备份文件导入，将覆盖当前所有设置和数据。</p>
                 <button type="button" class="s-action-btn" @click="importData">
                   <Icon icon="mdi:upload-outline" class="w-4 h-4" />
                   导入数据
@@ -653,7 +663,7 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
               <div class="py-3 space-y-4">
                 <div class="rounded-xl bg-red-500/10 border border-red-500/20 p-3">
                   <p class="text-red-500 text-xs leading-relaxed font-medium mb-1">⚠️ 完全重置</p>
-                  <p class="text-gray-500 text-xs leading-relaxed">
+                  <p class="text-gray-500 dark:text-gray-400 text-xs leading-relaxed">
                     将同时重置所有外观设置、图标、分组和组件数据，恢复到初始默认状态。此操作不可撤销。
                   </p>
                 </div>
@@ -671,13 +681,13 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
                   <Icon icon="mdi:tab" class="w-9 h-9 text-white" />
                 </div>
                 <div class="text-center">
-                  <h3 class="text-gray-800 font-semibold text-base">AItabs</h3>
-                  <p class="text-gray-400 text-xs mt-1">新标签页 v1.0.0</p>
+                  <h3 class="text-gray-800 dark:text-white font-semibold text-base">AItabs</h3>
+                  <p class="text-gray-400 dark:text-gray-500 text-xs mt-1">新标签页 v1.0.0</p>
                 </div>
-                <p class="text-gray-400 text-[11px] text-center leading-relaxed max-w-[180px]">
+                <p class="text-gray-400 dark:text-gray-500 text-[11px] text-center leading-relaxed max-w-[180px]">
                   一个简洁高效、可高度定制的浏览器新标签页应用
                 </p>
-                <div class="text-gray-400 text-[11px] text-center space-y-1">
+                <div class="text-gray-400 dark:text-gray-500 text-[11px] text-center space-y-1">
                   <p>基于 Vue 3 + TypeScript + Vite 构建</p>
                   <p>参考 <span class="text-gray-500">iTab</span> 设计</p>
                 </div>
@@ -685,7 +695,7 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
                   href="https://github.com"
                   target="_blank"
                   rel="noopener"
-                  class="flex items-center gap-1.5 text-gray-400 hover:text-gray-700 transition-colors text-xs"
+                  class="flex items-center gap-1.5 text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-white transition-colors text-xs"
                 >
                   <Icon icon="mdi:github" class="w-4 h-4" />
                   GitHub
@@ -869,4 +879,5 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
 .s-action-btn.danger:hover {
   background: rgba(239, 68, 68, 0.1);
 }
+
 </style>

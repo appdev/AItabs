@@ -57,6 +57,15 @@ export const useWidgetsStore = defineStore('widgets', () => {
     widget.dirty = true
   }
 
+  function restoreWidget(id: string) {
+    const widget = widgets.value.find(w => w.id === id)
+    if (widget) {
+      delete widget.deletedAt
+      widget.updatedAt = Date.now()
+      widget.dirty = true
+    }
+  }
+
   function updateWidget(id: string, updates: Partial<Widget>) {
     const widget = widgets.value.find(w => w.id === id)
     if (widget) {
@@ -118,7 +127,7 @@ export const useWidgetsStore = defineStore('widgets', () => {
 
   return {
     widgets, currentWidgets,
-    addWidget, removeWidget, updateWidget, reorderWidgets, resetWidgets,
+    addWidget, removeWidget, restoreWidget, updateWidget, reorderWidgets, resetWidgets,
     getDirtyWidgets, applyRemoteItem, applyRemoteChanges, clearDirty,
   }
 }, {

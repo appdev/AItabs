@@ -17,6 +17,7 @@ import { useContextMenu } from '@/composables/useContextMenu'
 import { useWidgetsStore } from '@/stores/widgets'
 import { useIconsStore } from '@/stores/icons'
 import { useSettingsStore } from '@/stores/settings'
+import { useEditMode } from '@/composables/useEditMode'
 import type { IconSize } from '@/types/icon'
 import type { Widget } from '@/types/widget'
 import type { SiteIcon } from '@/types/icon'
@@ -26,6 +27,7 @@ const iconsStore = useIconsStore()
 const settingsStore = useSettingsStore()
 const { columnCount, gapY } = useGridLayout()
 const { show: showContextMenu } = useContextMenu()
+const { isEditing, setEditMode } = useEditMode()
 
 const emit = defineEmits<{
   (e: 'add-icon'): void
@@ -68,6 +70,7 @@ function onDragEnd() {
 }
 
 function handleContextMenu(e: MouseEvent, gridItem: GridItem) {
+  if (isEditing.value) return
   e.preventDefault()
   e.stopPropagation()
   const type = gridItem.type === 'widget' ? 'widget' : 'icon'
@@ -75,13 +78,14 @@ function handleContextMenu(e: MouseEvent, gridItem: GridItem) {
 }
 
 function handleEmptyContextMenu(e: MouseEvent) {
+  if (isEditing.value) return
   e.preventDefault()
   showContextMenu(e, '', 'grid')
 }
 </script>
 
 <template>
-  <div class="w-full flex justify-center" @contextmenu.prevent="handleEmptyContextMenu">
+  <div class="w-full flex justify-center" @click.self="setEditMode(false)" @contextmenu.prevent="handleEmptyContextMenu">
     <VueDraggable
       v-model="localItems"
       :style="gridStyle"
@@ -122,23 +126,24 @@ function handleEmptyContextMenu(e: MouseEvent) {
 
       <!-- 固定的添加图标按钮 -->
       <div
+        v-if="!isEditing"
         class="min-w-0 no-drag flex flex-col items-center gap-1 group cursor-pointer"
         style="grid-column: span 1; grid-row: span 1;"
         :style="{ opacity: 'var(--icon-opacity)' }"
         @click="$emit('add-icon')"
       >
         <div 
-          class="flex items-center justify-center rounded-[var(--icon-radius)] bg-white/90 hover:bg-white transition-colors flex-shrink-0"
+          class="flex items-center justify-center rounded-[var(--icon-radius)] bg-white/40 hover:bg-white/60 dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-md transition-colors flex-shrink-0"
           style="width: var(--icon-size); height: var(--icon-size);"
         >
-          <div class="w-10 h-10 rounded-full bg-[#1890ff] flex items-center justify-center">
+          <div class="w-10 h-10 rounded-full bg-[#1890ff] flex items-center justify-center shadow-sm">
             <Icon icon="mdi:plus" class="w-6 h-6 text-white" />
           </div>
         </div>
         <span
           v-if="settingsStore.settings.icon.nameShow"
-          class="truncate max-w-full text-center"
-          style="color: var(--icon-name-color); font-size: var(--icon-name-size);"
+          class="truncate max-w-full text-center drop-shadow-md font-medium"
+          style="color: var(--icon-name-color); font-size: var(--icon-name-size); text-shadow: 0 1px 2px rgba(0,0,0,0.5);"
         >添加图标</span>
       </div>
     </VueDraggable>

@@ -137,6 +137,12 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }, { deep: true, immediate: true })
 
+  // 跟随系统时，系统主题变化也立即刷新
+  const darkMq = window.matchMedia('(prefers-color-scheme: dark)')
+  darkMq.addEventListener('change', () => {
+    if (settings.value.theme.system) updateCSSVars()
+  })
+
   // 初始化后才开始跟踪
   setTimeout(() => { trackChanges = true }, 100)
 

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Icon } from '@iconify/vue'
 import { useSettingsStore } from '@/stores/settings'
+import { useEditMode } from '@/composables/useEditMode'
+import { useIconsStore } from '@/stores/icons'
+import { useUndoToast } from '@/composables/useUndoToast'
 import type { SiteIcon } from '@/types/icon'
 
 const props = defineProps<{
@@ -8,6 +12,9 @@ const props = defineProps<{
 }>()
 
 const settingsStore = useSettingsStore()
+const iconsStore = useIconsStore()
+const { isEditing } = useEditMode()
+const { showToast } = useUndoToast()
 
 const openInNewTab = computed(
   () => props.icon.openInNewTab ?? settingsStore.settings.open.iconBlank
@@ -51,51 +58,80 @@ const fontSizeStyle = computed(() => {
 })
 
 function handleClick() {
+  if (isEditing.value) return // 编辑模式下不触发跳转
   if (props.icon.url) {
     window.open(props.icon.url, openInNewTab.value ? '_blank' : '_self')
   }
 }
+
+function handleDelete(e: MouseEvent) {
+  e.preventDefault()
+  e.stopPropagation()
+  
+  const name = props.icon.name || '图标'
+  iconsStore.removeIcon(props.icon.id)
+  
+  showToast(`已删除"${name}"`, () => {
+    iconsStore.restoreIcon(props.icon.id)
+  })
+}
 </script>
 
 <template>
-  <button
-    type="button"
-    class="flex flex-col items-center gap-1 w-full min-w-0 group"
+  <div
+    class="relative flex flex-col items-center gap-1 w-full min-w-0 group"
+    :class="{ 'edit-shake cursor-grab': isEditing }"
     :style="{ opacity: 'var(--icon-opacity)' }"
-    @click="handleClick"
   >
+    <!-- 删除按钮（X） -->
     <div
-      class="flex items-center justify-center rounded-[var(--icon-radius)] overflow-hidden flex-shrink-0 transition-shadow shadow-[0_0_5px_rgba(0,0,0,0.1)] group-hover:shadow-[0_0_10px_rgba(0,0,0,0.3)] active:scale-[0.99]"
-      :style="{
-        width: widthStyle,
-        height: heightStyle,
-        backgroundColor: icon.bgColor,
-      }"
+      v-if="isEditing"
+      class="absolute -top-2 -right-2 z-[60] w-6 h-6 flex items-center justify-center rounded-full bg-gray-500/80 hover:bg-red-500 text-white cursor-pointer backdrop-blur-md shadow-sm transition-colors"
+      @click.stop="handleDelete"
     >
-      <img
-        v-if="icon.icon && !icon.iconText"
-        :src="icon.icon"
-        :alt="icon.name"
-        class="w-full h-full object-cover"
-      />
-      <span
-        v-else
-        class="text-white font-bold select-none leading-none text-center px-1 overflow-hidden truncate max-w-full"
-        :style="{
-          fontSize: displayText.length > 2
-            ? `calc(${fontSizeStyle} * 0.5)`
-            : displayText.length > 1
-              ? `calc(${fontSizeStyle} * 0.75)`
-              : fontSizeStyle
-        }"
-      >{{ displayText }}</span>
+      <Icon icon="mdi:close" class="w-4 h-4" />
     </div>
-    <span
-      v-if="settingsStore.settings.icon.nameShow"
-      class="truncate max-w-full text-center"
-      :style="{ color: 'var(--icon-name-color)', fontSize: 'var(--icon-name-size)' }"
+
+    <button
+      type="button"
+      class="flex flex-col items-center gap-1 w-full min-w-0 group cursor-pointer"
+      :class="{ 'pointer-events-none': isEditing }"
+      @click="handleClick"
     >
-      {{ icon.name }}
-    </span>
-  </button>
+      <div
+        class="flex items-center justify-center rounded-[var(--icon-radius)] overflow-hidden flex-shrink-0 transition-shadow shadow-[0_0_5px_rgba(0,0,0,0.1)] group-hover:shadow-[0_0_10px_rgba(0,0,0,0.3)]"
+        :class="{ 'active:scale-[0.99]': !isEditing }"
+        :style="{
+          width: widthStyle,
+          height: heightStyle,
+          backgroundColor: icon.bgColor,
+        }"
+      >
+        <img
+          v-if="icon.icon && !icon.iconText"
+          :src="icon.icon"
+          :alt="icon.name"
+          class="w-full h-full object-cover"
+        />
+        <span
+          v-else
+          class="text-white font-bold select-none leading-none text-center px-1 overflow-hidden truncate max-w-full"
+          :style="{
+            fontSize: displayText.length > 2
+              ? `calc(${fontSizeStyle} * 0.5)`
+              : displayText.length > 1
+                ? `calc(${fontSizeStyle} * 0.75)`
+                : fontSizeStyle
+          }"
+        >{{ displayText }}</span>
+      </div>
+      <span
+        v-if="settingsStore.settings.icon.nameShow"
+        class="truncate max-w-full text-center"
+        :style="{ color: 'var(--icon-name-color)', fontSize: 'var(--icon-name-size)' }"
+      >
+        {{ icon.name }}
+      </span>
+    </button>
+  </div>
 </template>

@@ -36,6 +36,7 @@ declare module 'vue' {
     SearchBar: typeof import('./components/layout/SearchBar.vue')['default']
     SettingsDialog: typeof import('./components/dialogs/SettingsDialog.vue')['default']
     Sidebar: typeof import('./components/layout/Sidebar.vue')['default']
+    UndoToast: typeof import('./components/common/UndoToast.vue')['default']
     WeatherWidget: typeof import('./components/widgets/WeatherWidget.vue')['default']
     WidgetConfigDialog: typeof import('./components/dialogs/WidgetConfigDialog.vue')['default']
     WidgetWrapper: typeof import('./components/widgets/WidgetWrapper.vue')['default']

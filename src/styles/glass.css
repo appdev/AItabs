@@ -19,10 +19,11 @@
 }
 
 .glass-menu {
-  backdrop-filter: blur(10px);
-  background: rgba(11, 11, 11, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: rgba(0, 0, 0, 0.5) 0px 10px 30px 0px;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: rgba(0, 0, 0, 0.12) 0px 10px 30px 0px;
 }
 
 .glass-dialog {
@@ -46,4 +47,83 @@
 .glass-quote {
   backdrop-filter: blur(12px);
   background: rgba(0, 0, 0, 0.2);
+}
+
+/* ====== 深色模式 ====== */
+.dark .glass-dialog {
+  background: rgba(30, 30, 36, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.8) 0px 12px 32px 0px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.dark .glass-menu {
+  background: rgba(26, 26, 26, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.5) 0px 10px 30px 0px;
+}
+
+.dark .glass-dialog label {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.dark .glass-card {
+  background: rgba(30, 30, 42, 0.75);
+}
+
+.dark .glass-folder {
+  background: rgba(30, 30, 42, 0.75);
+}
+
+.dark .glass-search {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.dark .glass-search-engine {
+  background: rgba(40, 40, 55, 0.88);
+}
+
+.dark .glass-search-suggest {
+  background: rgba(30, 30, 42, 0.65);
+}
+
+.dark .glass-dialog .el-input__wrapper {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+}
+
+.dark .glass-dialog .el-input__inner {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.dark .glass-dialog .el-input__inner::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* 覆盖 Element Plus 深色模式输入框样式，确保文本清晰 */
+html.dark .el-input__inner {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.dark .el-input__wrapper {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
+}
+
+html.dark .el-input__inner::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* AddDialog 专用深色输入框样式 */
+.dark .dark-input .el-input__wrapper {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
+}
+
+.dark .dark-input .el-input__inner {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.dark .dark-input .el-input__inner::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
 }

@@ -17,7 +17,15 @@ import UndoToast from '@/components/common/UndoToast.vue'
 // 弹窗类组件按需加载，减少首屏包体积
 const SettingsDialog = defineAsyncComponent(() => import('@/components/dialogs/SettingsDialog.vue'))
 const AddDialog = defineAsyncComponent(() => import('@/components/dialogs/AddDialog.vue'))
-const WidgetConfigDialog = defineAsyncComponent(() => import('@/components/dialogs/WidgetConfigDialog.vue'))
+const TodoDialog = defineAsyncComponent(() => import('@/components/dialogs/TodoDialog.vue'))
+const MemoDialog = defineAsyncComponent(() => import('@/components/dialogs/MemoDialog.vue'))
+const CountdownConfigDialog = defineAsyncComponent(() => import('@/components/dialogs/CountdownConfigDialog.vue'))
+const AnniversaryConfigDialog = defineAsyncComponent(() => import('@/components/dialogs/AnniversaryConfigDialog.vue'))
+const WeatherConfigDialog = defineAsyncComponent(() => import('@/components/dialogs/WeatherConfigDialog.vue'))
+const WeatherDetailDialog = defineAsyncComponent(() => import('@/components/dialogs/WeatherDetailDialog.vue'))
+const CalendarDetailDialog = defineAsyncComponent(() => import('@/components/dialogs/CalendarDetailDialog.vue'))
+const HotSearchDetailDialog = defineAsyncComponent(() => import('@/components/dialogs/HotSearchDetailDialog.vue'))
+const MovieDetailDialog = defineAsyncComponent(() => import('@/components/dialogs/MovieDetailDialog.vue'))
 
 const settingsStore = useSettingsStore()
 const { activeSrc, wallpaperOpacity } = useWallpaper()
@@ -136,6 +144,14 @@ onMounted(async () => {
 
     <SettingsDialog v-model:visible="showSettings" />
     <AddDialog v-model:visible="showAdd" :active-tab="addTab" :edit-icon-id="currentEditIconId" />
-    <WidgetConfigDialog />
+    <TodoDialog />
+    <MemoDialog />
+    <CountdownConfigDialog />
+    <AnniversaryConfigDialog />
+    <WeatherConfigDialog />
+    <WeatherDetailDialog />
+    <CalendarDetailDialog />
+    <HotSearchDetailDialog />
+    <MovieDetailDialog />
   </div>
 </template>

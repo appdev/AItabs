@@ -4,6 +4,7 @@ import dayOfYear from 'dayjs/plugin/dayOfYear'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useClock } from '@/composables/useClock'
+import { useCalendarDetailDialog } from '@/composables/useCalendarDetailDialog'
 import type { Widget } from '@/types/widget'
 
 dayjs.extend(dayOfYear)
@@ -26,10 +27,19 @@ onUnmounted(() => {
 })
 
 const WEEK_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+
+// 点击打开日历详情对话框
+const { openDialog } = useCalendarDetailDialog()
+function handleClick() {
+  openDialog(now.value.toDate())
+}
 </script>
 
 <template>
-  <div class="w-full h-full glass-card p-3 flex flex-col select-none text-gray-800 dark:text-white">
+  <div
+    class="w-full h-full glass-card p-3 flex flex-col select-none text-gray-800 dark:text-white cursor-pointer transition-transform hover:scale-105"
+    @click="handleClick"
+  >
 
     <!-- 顶部：年月橙色徽章 -->
     <div>

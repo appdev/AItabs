@@ -6,6 +6,7 @@ import { useIconsStore } from '@/stores/icons'
 import { useWidgetsStore } from '@/stores/widgets'
 import { useGroupsStore } from '@/stores/groups'
 import { useSettingsStore } from '@/stores/settings'
+import { useTodosStore } from '@/stores/todos'
 
 const DEVICE_ID_KEY = 'aitabs-device-id'
 const LAST_SYNC_KEY = 'aitabs-last-sync'
@@ -52,15 +53,20 @@ export async function push(): Promise<void> {
   const widgetsStore = useWidgetsStore()
   const groupsStore = useGroupsStore()
   const settingsStore = useSettingsStore()
+  const todosStore = useTodosStore()
 
   const dirtyIcons = iconsStore.getDirtyIcons()
   const dirtyWidgets = widgetsStore.getDirtyWidgets()
   const dirtyGroups = groupsStore.getDirtyGroups()
+  const dirtyTodoItems = todosStore.getDirtyItems()
+  const dirtyTodoLists = todosStore.getDirtyLists()
 
   const hasChanges =
     dirtyIcons.length > 0 ||
     dirtyWidgets.length > 0 ||
     dirtyGroups.length > 0 ||
+    dirtyTodoItems.length > 0 ||
+    dirtyTodoLists.length > 0 ||
     settingsStore.dirty
 
   if (!hasChanges) return
@@ -94,6 +100,24 @@ export async function push(): Promise<void> {
     }))
   }
 
+  if (dirtyTodoItems.length > 0) {
+    body.todoItems = dirtyTodoItems.map(t => ({
+      id: t.id,
+      data: { ...t, dirty: undefined },
+      updatedAt: t.updatedAt ?? Date.now(),
+      deletedAt: t.deletedAt ?? null,
+    }))
+  }
+
+  if (dirtyTodoLists.length > 0) {
+    body.todoLists = dirtyTodoLists.map(l => ({
+      id: l.id,
+      data: { ...l, dirty: undefined },
+      updatedAt: l.updatedAt ?? Date.now(),
+      deletedAt: l.deletedAt ?? null,
+    }))
+  }
+
   if (settingsStore.dirty) {
     body.settings = {
       data: settingsStore.settings,
@@ -110,6 +134,8 @@ export async function push(): Promise<void> {
         icons?: ConflictItem[]
         widgets?: ConflictItem[]
         groups?: ConflictItem[]
+        todoItems?: ConflictItem[]
+        todoLists?: ConflictItem[]
         settings?: { serverData: Record<string, unknown>; serverVersion: number }
       }
     }
@@ -130,6 +156,8 @@ export async function push(): Promise<void> {
     c.icons?.forEach(ci => iconsStore.applyRemoteItem({ id: ci.id, data: ci.serverData, updatedAt: ci.serverUpdatedAt }))
     c.widgets?.forEach(cw => widgetsStore.applyRemoteItem({ id: cw.id, data: cw.serverData, updatedAt: cw.serverUpdatedAt }))
     c.groups?.forEach(cg => groupsStore.applyRemoteItem({ id: cg.id, data: cg.serverData, updatedAt: cg.serverUpdatedAt }))
+    c.todoItems?.forEach(ct => todosStore.applyRemoteItems([{ id: ct.id, data: ct.serverData, updatedAt: ct.serverUpdatedAt }]))
+    c.todoLists?.forEach(cl => todosStore.applyRemoteLists([{ id: cl.id, data: cl.serverData, updatedAt: cl.serverUpdatedAt }]))
     if (c.settings) {
       settingsStore.applyRemoteSettings(c.settings.serverData, c.settings.serverVersion)
     }
@@ -140,6 +168,7 @@ export async function push(): Promise<void> {
       iconsStore.clearDirty()
       widgetsStore.clearDirty()
       groupsStore.clearDirty()
+      todosStore.clearDirty()
       settingsStore.clearDirty()
       await nextTick()
     } finally {
@@ -161,6 +190,7 @@ export async function pull(): Promise<void> {
   const widgetsStore = useWidgetsStore()
   const groupsStore = useGroupsStore()
   const settingsStore = useSettingsStore()
+  const todosStore = useTodosStore()
 
   try {
     type PullItem = { id: string; data: Record<string, unknown>; updatedAt: number; deletedAt?: number | null }
@@ -168,6 +198,8 @@ export async function pull(): Promise<void> {
       icons: PullItem[]
       widgets: PullItem[]
       groups: PullItem[]
+      todoItems: PullItem[]
+      todoLists: PullItem[]
       settings: { data: Record<string, unknown>; version: number; updatedAt: number } | null
       serverTime: number
     }
@@ -182,6 +214,8 @@ export async function pull(): Promise<void> {
       iconsStore.applyRemoteChanges(res.icons)
       widgetsStore.applyRemoteChanges(res.widgets)
       groupsStore.applyRemoteChanges(res.groups)
+      todosStore.applyRemoteItems(res.todoItems || [])
+      todosStore.applyRemoteLists(res.todoLists || [])
 
       if (res.settings) {
         settingsStore.applyRemoteSettings(res.settings.data, res.settings.version)
@@ -264,6 +298,7 @@ export function initAutoSync(): void {
   const widgetsStore = useWidgetsStore()
   const groupsStore = useGroupsStore()
   const settingsStore = useSettingsStore()
+  const todosStore = useTodosStore()
 
   function scheduleSync() {
     if (!isLoggedIn.value || suppressAutoSync) return
@@ -280,6 +315,8 @@ export function initAutoSync(): void {
   watch(() => iconsStore.icons, scheduleSync, { deep: true })
   watch(() => widgetsStore.widgets, scheduleSync, { deep: true })
   watch(() => groupsStore.groups, scheduleSync, { deep: true })
+  watch(() => todosStore.items, scheduleSync, { deep: true })
+  watch(() => todosStore.lists, scheduleSync, { deep: true })
   watch(() => settingsStore.settings, scheduleSync, { deep: true })
 
   // 从后台切回前台时自动拉取最新数据

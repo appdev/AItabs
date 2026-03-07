@@ -10,6 +10,7 @@ import CountdownWidget from '@/components/widgets/CountdownWidget.vue'
 import MemoWidget from '@/components/widgets/MemoWidget.vue'
 import MovieWidget from '@/components/widgets/MovieWidget.vue'
 import AnniversaryWidget from '@/components/widgets/AnniversaryWidget.vue'
+import TodoWidget from '@/components/widgets/TodoWidget.vue'
 import IconItem from '@/components/icons/IconItem.vue'
 import IconFolder from '@/components/icons/IconFolder.vue'
 import { useGridLayout } from '@/composables/useGridLayout'
@@ -116,6 +117,7 @@ function handleEmptyContextMenu(e: MouseEvent) {
           <MemoWidget        v-else-if="item.data.type === 'memo'"        :widget="item.data" />
           <MovieWidget       v-else-if="item.data.type === 'movie'"       :widget="item.data" />
           <AnniversaryWidget v-else-if="item.data.type === 'anniversary'" :widget="item.data" />
+          <TodoWidget        v-else-if="item.data.type === 'todo'"        :widget="item.data" />
         </WidgetWrapper>
 
         <!-- 文件夹图标 -->

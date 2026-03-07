@@ -3,12 +3,26 @@ import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useWeather } from '@/composables/useWeather'
 import type { Widget } from '@/types/widget'
+import type { WeatherConfig } from '@/types/weather'
+import { DEFAULT_WEATHER_CONFIG } from '@/types/weather'
+import { useWeatherDetailDialog } from '@/composables/useWeatherDetailDialog'
 
 const props = defineProps<{ widget: Widget }>()
 
-const cityRef = () => (props.widget.config.city as string) ?? ''
-const unitRef = () => (props.widget.config.unit as 'celsius' | 'fahrenheit') ?? 'celsius'
+const { openDialog } = useWeatherDetailDialog()
+
+const config = computed<WeatherConfig>(() => {
+  return props.widget.data?.config || DEFAULT_WEATHER_CONFIG
+})
+
+const cityRef = () => config.value.city
+const unitRef = () => config.value.unit
 const unit = computed(() => unitRef())
+
+// 双击打开详情对话框
+function handleDblClick() {
+  openDialog(props.widget.id)
+}
 
 const { city, temp, desc, high, low, aqi, weatherIcon, loading, error, refresh } = useWeather({ cityRef, unitRef })
 
@@ -27,7 +41,7 @@ const aqiColor = computed(() => {
 </script>
 
 <template>
-  <div class="w-full h-full glass-card p-3 flex flex-col select-none text-gray-800 dark:text-white">
+  <div class="w-full h-full glass-card p-3 flex flex-col select-none text-gray-800 dark:text-white cursor-pointer hover:scale-105 transition-transform" @dblclick="handleDblClick">
 
     <!-- 加载中 -->
     <template v-if="loading">

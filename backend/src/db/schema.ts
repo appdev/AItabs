@@ -49,6 +49,28 @@ export const syncSettings = sqliteTable('sync_settings', {
   updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
 })
 
+// ---- 同步数据表：todo items ----
+export const syncTodoItems = sqliteTable('sync_todo_items', {
+  id: text('id').notNull(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  data: text('data').notNull(),
+  updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
+  deletedAt: integer('deleted_at', { mode: 'number' }),
+}, (t) => [
+  primaryKey({ columns: [t.userId, t.id] }),
+])
+
+// ---- 同步数据表：todo lists ----
+export const syncTodoLists = sqliteTable('sync_todo_lists', {
+  id: text('id').notNull(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  data: text('data').notNull(),
+  updatedAt: integer('updated_at', { mode: 'number' }).notNull(),
+  deletedAt: integer('deleted_at', { mode: 'number' }),
+}, (t) => [
+  primaryKey({ columns: [t.userId, t.id] }),
+])
+
 // ---- 网站信息缓存（按 host 去重）----
 export const siteCache = sqliteTable('site_cache', {
   host: text('host').primaryKey(),

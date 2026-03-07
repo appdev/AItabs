@@ -12,6 +12,7 @@ export const WIDGET_REGISTRY: WidgetMeta[] = [
   { type: 'memo', name: '备忘录', description: '快速记录备忘', defaultSize: '2x2', icon: 'mdi:note-text-outline', category: '效率' },
   { type: 'movie', name: '电影日历', description: '每天一部优秀电影', defaultSize: '2x2', icon: 'mdi:movie-open-outline', category: '娱乐' },
   { type: 'anniversary', name: '纪念日', description: '重要日期纪念', defaultSize: '2x2', icon: 'mdi:heart-outline', category: '效率' },
+  { type: 'todo', name: '待办事项', description: '任务管理和提醒', defaultSize: '2x2', icon: 'mdi:checkbox-marked-circle-outline', category: '效率' },
 ]
 
 const DEFAULT_WIDGETS: Widget[] = [

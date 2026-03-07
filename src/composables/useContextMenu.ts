@@ -1,4 +1,10 @@
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useWidgetsStore } from '@/stores/widgets'
+import { useTodoDialog } from './useTodoDialog'
+import { useMemoDialog } from './useMemoDialog'
+import { useCountdownDialog } from './useCountdownDialog'
+import { useAnniversaryDialog } from './useAnniversaryDialog'
+import { useWeatherDialog } from './useWeatherDialog'
 
 export interface ContextMenuState {
   visible: boolean
@@ -25,8 +31,6 @@ const activeSettingsMenu = ref<string>('') // 用于控制打开设置时的默�
 // 编辑图标：复用 AddDialog（custom tab）
 const showEditIcon = ref(false)
 const editIconId = ref('')
-const showWidgetConfig = ref(false)
-const configuringWidgetId = ref('')
 
 export function useContextMenu() {
   function show(e: MouseEvent, targetId: string, targetType: 'icon' | 'widget' | 'grid' = 'icon') {
@@ -65,9 +69,38 @@ export function useContextMenu() {
   }
 
   function openWidgetConfig() {
-    configuringWidgetId.value = state.value.targetId
+    const widgetId = state.value.targetId
+    if (!widgetId) return
+
+    // 获取 widget 类型
+    const widgetsStore = useWidgetsStore()
+    const widget = widgetsStore.widgets.find(w => w.id === widgetId)
+    if (!widget) return
+
     hide()
-    showWidgetConfig.value = true
+
+    // 根据 widget 类型打开对应的专用对话框
+    switch (widget.type) {
+      case 'todo':
+        useTodoDialog().openDialog()
+        break
+      case 'memo':
+        useMemoDialog().openDialog(widgetId)
+        break
+      case 'countdown':
+        useCountdownDialog().openDialog(widgetId)
+        break
+      case 'anniversary':
+        useAnniversaryDialog().openDialog(widgetId)
+        break
+      case 'weather':
+        useWeatherDialog().openDialog(widgetId)
+        break
+      default:
+        // 其他类型暂无配置对话框
+        console.log(`Widget type "${widget.type}" has no config dialog yet`)
+        break
+    }
   }
 
   function onClickOutside(e: MouseEvent) {
@@ -91,5 +124,5 @@ export function useContextMenu() {
     document.removeEventListener('keydown', onKeydown)
   })
 
-  return { state, show, hide, openEditor, openSettings, openAddIcon, openWidgetConfig, showIconEditor, editingIconId, showSettingsFromMenu, activeSettingsMenu, showAddIconFromMenu, showWidgetConfig, configuringWidgetId, showEditIcon, editIconId }
+  return { state, show, hide, openEditor, openSettings, openAddIcon, openWidgetConfig, showIconEditor, editingIconId, showSettingsFromMenu, activeSettingsMenu, showAddIconFromMenu, showEditIcon, editIconId }
 }

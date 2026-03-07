@@ -1,7 +1,7 @@
 import { and, eq, gt } from 'drizzle-orm'
 import { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core'
 import { db } from '@/db/client.ts'
-import { syncIcons, syncWidgets, syncGroups, syncSettings } from '@/db/schema.ts'
+import { syncIcons, syncWidgets, syncGroups, syncSettings, syncTodoItems, syncTodoLists } from '@/db/schema.ts'
 import type {
   PushRequest, PushResponse, PullResponse,
   ConflictItem, SyncItem,
@@ -41,6 +41,12 @@ export async function buildPull(userId: string, since: number): Promise<PullResp
   const groupRows = await db.select().from(syncGroups)
     .where(and(eq(syncGroups.userId, userId), gt(syncGroups.updatedAt, since)))
 
+  const todoItemRows = await db.select().from(syncTodoItems)
+    .where(and(eq(syncTodoItems.userId, userId), gt(syncTodoItems.updatedAt, since)))
+
+  const todoListRows = await db.select().from(syncTodoLists)
+    .where(and(eq(syncTodoLists.userId, userId), gt(syncTodoLists.updatedAt, since)))
+
   const settingRows = await db.select().from(syncSettings)
     .where(and(eq(syncSettings.userId, userId), gt(syncSettings.updatedAt, since)))
   const settings = settingRows[0]
@@ -49,6 +55,8 @@ export async function buildPull(userId: string, since: number): Promise<PullResp
     icons: iconRows.map(toItem),
     widgets: widgetRows.map(toItem),
     groups: groupRows.map(toItem),
+    todoItems: todoItemRows.map(toItem),
+    todoLists: todoListRows.map(toItem),
     settings: settings
       ? {
           data: JSON.parse(settings.data) as Record<string, unknown>,
@@ -69,6 +77,8 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
     (body.icons?.length ?? 0) > 0 ||
     (body.widgets?.length ?? 0) > 0 ||
     (body.groups?.length ?? 0) > 0 ||
+    (body.todoItems?.length ?? 0) > 0 ||
+    (body.todoLists?.length ?? 0) > 0 ||
     body.settings !== undefined
   if (!hasContent) {
     return { ok: true, conflicts: {} }
@@ -84,6 +94,12 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
   if ((body.groups?.length ?? 0) > MAX_ITEMS_PER_TYPE) {
     throw new RangeError(`groups 超过单次最大推送数量 ${MAX_ITEMS_PER_TYPE}`)
   }
+  if ((body.todoItems?.length ?? 0) > MAX_ITEMS_PER_TYPE) {
+    throw new RangeError(`todoItems 超过单次最大推送数量 ${MAX_ITEMS_PER_TYPE}`)
+  }
+  if ((body.todoLists?.length ?? 0) > MAX_ITEMS_PER_TYPE) {
+    throw new RangeError(`todoLists 超过单次最大推送数量 ${MAX_ITEMS_PER_TYPE}`)
+  }
 
   const now = Date.now()
 
@@ -91,6 +107,8 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
     const iconConflicts: ConflictItem[] = []
     const widgetConflicts: ConflictItem[] = []
     const groupConflicts: ConflictItem[] = []
+    const todoItemConflicts: ConflictItem[] = []
+    const todoListConflicts: ConflictItem[] = []
     let settingsConflict: { serverData: Record<string, unknown>; serverVersion: number } | undefined
     let newSettingsVersion: number | undefined
 
@@ -107,6 +125,16 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
     // --- groups ---
     for (const item of body.groups ?? []) {
       await upsertItem(tx, syncGroups, userId, item, now, groupConflicts)
+    }
+
+    // --- todoItems ---
+    for (const item of body.todoItems ?? []) {
+      await upsertItem(tx, syncTodoItems, userId, item, now, todoItemConflicts)
+    }
+
+    // --- todoLists ---
+    for (const item of body.todoLists ?? []) {
+      await upsertItem(tx, syncTodoLists, userId, item, now, todoListConflicts)
     }
 
     // --- settings（乐观锁） ---
@@ -142,7 +170,15 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
       }
     }
 
-    return { iconConflicts, widgetConflicts, groupConflicts, settingsConflict, newSettingsVersion }
+    return {
+      iconConflicts,
+      widgetConflicts,
+      groupConflicts,
+      todoItemConflicts,
+      todoListConflicts,
+      settingsConflict,
+      newSettingsVersion
+    }
   })
 
   return {
@@ -152,6 +188,8 @@ export async function mergePush(userId: string, body: PushRequest): Promise<Push
       ...(conflicts.iconConflicts.length > 0 && { icons: conflicts.iconConflicts }),
       ...(conflicts.widgetConflicts.length > 0 && { widgets: conflicts.widgetConflicts }),
       ...(conflicts.groupConflicts.length > 0 && { groups: conflicts.groupConflicts }),
+      ...(conflicts.todoItemConflicts.length > 0 && { todoItems: conflicts.todoItemConflicts }),
+      ...(conflicts.todoListConflicts.length > 0 && { todoLists: conflicts.todoListConflicts }),
       ...(conflicts.settingsConflict && { settings: conflicts.settingsConflict }),
     },
   }

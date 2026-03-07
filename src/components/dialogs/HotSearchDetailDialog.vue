@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+import { Icon } from '@iconify/vue'
+import DialogTitleBar from '@/components/common/DialogTitleBar.vue'
 import { useHotSearchDetailDialog } from '@/composables/useHotSearchDetailDialog'
-import type { Widget } from '@/types/widget'
 
-defineProps<{ widget: Widget }>()
+const { visible, currentSource, closeDialog } = useHotSearchDetailDialog()
 
 type Source = 'baidu' | 'weibo' | 'douyin'
-
-const CACHE_KEY_PREFIX = 'aitabs-hotsearch-'
-const CACHE_TTL = 10 * 60 * 1000
-
-const active = ref<Source>('baidu')
 
 const TABS: { key: Source; label: string; color: string }[] = [
   { key: 'baidu', label: '百度', color: '#346efd' },
@@ -20,7 +16,7 @@ const TABS: { key: Source; label: string; color: string }[] = [
 
 type HotItem = { title: string; heat: string }
 
-// Mock 数据（对接真实 API 后只需替换此处）
+// Mock 数据（与 HotSearchWidget 保持一致）
 const MOCK_DATA: Record<Source, HotItem[]> = {
   baidu: [
     { title: 'DeepSeek R2 正式发布', heat: '892.3万' },
@@ -90,35 +86,9 @@ const MOCK_DATA: Record<Source, HotItem[]> = {
   ],
 }
 
-const lists = ref<Record<Source, HotItem[]>>({ baidu: [], weibo: [], douyin: [] })
+const activeSource = ref<Source>(currentSource.value)
 
-// 从缓存读取，若过期则重新"获取"（目前使用 mock，后续可替换为真实 API）
-function loadSource(source: Source) {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY_PREFIX + source)
-    if (raw) {
-      const { data, timestamp }: { data: HotItem[]; timestamp: number } = JSON.parse(raw)
-      if (Date.now() - timestamp < CACHE_TTL) {
-        lists.value[source] = data
-        return
-      }
-    }
-  } catch { /* 缓存损坏，重新加载 */ }
-
-  // 目前直接使用 mock 数据并写入缓存
-  lists.value[source] = MOCK_DATA[source]
-  localStorage.setItem(
-    CACHE_KEY_PREFIX + source,
-    JSON.stringify({ data: MOCK_DATA[source], timestamp: Date.now() }),
-  )
-}
-
-onMounted(() => {
-  // 预加载当前激活源，其余两个延迟加载
-  loadSource('baidu')
-  loadSource('weibo')
-  loadSource('douyin')
-})
+const currentList = computed(() => MOCK_DATA[activeSource.value] || [])
 
 function rankColor(rank: number): string {
   if (rank === 1) return '#ff4444'
@@ -134,57 +104,69 @@ const SEARCH_URLS: Record<Source, string> = {
 }
 
 function handleClick(title: string) {
-  window.open(SEARCH_URLS[active.value] + encodeURIComponent(title), '_blank')}
-
-// 点击标签栏打开详情对话框
-const { openDialog } = useHotSearchDetailDialog()
-function handleTabAreaClick() {
-  openDialog(active.value)
+  window.open(SEARCH_URLS[activeSource.value] + encodeURIComponent(title), '_blank')
 }
 </script>
 
 <template>
-  <div class="w-full h-full glass-card flex flex-col overflow-hidden select-none">
-
-    <!-- 顶部标签栏 -->
-    <div
-      class="flex items-center gap-0.5 px-2 pt-2 pb-1 flex-shrink-0 cursor-pointer"
-      @click="handleTabAreaClick"
-    >
-      <button
-        v-for="tab in TABS"
-        :key="tab.key"
-        type="button"
-        class="px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors"
-        :style="active === tab.key ? { backgroundColor: tab.color, color: '#fff' } : {}"
-        :class="active !== tab.key ? 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10' : ''"
-        @click.stop="active = tab.key"
+  <Teleport to="body">
+    <Transition name="dialog">
+      <div
+        v-if="visible"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+        @click.self="closeDialog"
       >
-        {{ tab.label }}
-      </button>
-    </div>
+        <div class="glass-dialog w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <!-- 统一的头部 -->
+          <DialogTitleBar title="热搜榜" @close="closeDialog" />
 
-    <!-- 列表 -->
-    <div class="flex-1 overflow-y-auto px-2 pb-1">
-      <button
-        v-for="(item, idx) in lists[active]"
-        :key="idx"
-        type="button"
-        class="w-full flex items-center gap-1.5 py-[3px] text-left hover:bg-gray-50 dark:hover:bg-white/10 rounded transition-colors group"
-        @click="handleClick(item.title)"
-      >
-        <span
-          class="text-[11px] font-bold tabular-nums w-4 flex-shrink-0 text-right leading-none"
-          :style="{ color: rankColor(idx + 1) }"
-        >
-          {{ idx + 1 }}
-        </span>
-        <span class="flex-1 text-[11px] text-gray-700 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-          {{ item.title }}
-        </span>
-        <span class="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0">{{ item.heat }}</span>
-      </button>
-    </div>
+          <!-- 数据源标签 -->
+          <div class="flex items-center gap-2 px-6 py-3 border-b border-white/10">
+            <button
+              v-for="tab in TABS"
+              :key="tab.key"
+              type="button"
+              class="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
+              :style="activeSource === tab.key ? { backgroundColor: tab.color, color: '#fff' } : {}"
+              :class="activeSource !== tab.key ? 'text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5' : ''"
+              @click="activeSource = tab.key"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
 
-  </div>
+          <!-- 热搜列表 -->
+          <div class="flex-1 overflow-y-auto p-6">
+            <div class="space-y-2">
+              <button
+                v-for="(item, idx) in currentList"
+                :key="idx"
+                type="button"
+                class="w-full flex items-center gap-3 p-3 text-left hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors group"
+                @click="handleClick(item.title)"
+              >
+                <span
+                  class="text-sm font-bold tabular-nums w-6 flex-shrink-0 text-right"
+                  :style="{ color: rankColor(idx + 1) }"
+                >
+                  {{ idx + 1 }}
+                </span>
+                <span class="flex-1 text-sm text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {{ item.title }}
+                </span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{{ item.heat }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 免责声明 -->
+          <div class="px-6 py-3 border-t border-white/10 text-xs text-gray-500 dark:text-gray-400 text-center">
+            本热搜榜单所陈列的热点信息采集自于互联网，仅供参考
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
+
+

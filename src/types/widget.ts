@@ -8,6 +8,7 @@ export type WidgetType =
   | 'memo'
   | 'movie'
   | 'anniversary'
+  | 'todo'
 
 export interface Widget {
   id: string

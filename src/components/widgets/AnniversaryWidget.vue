@@ -2,13 +2,22 @@
 import dayjs from 'dayjs'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { Widget } from '@/types/widget'
+import type { AnniversaryConfig } from '@/types/anniversary'
+import { DEFAULT_ANNIVERSARY_CONFIG } from '@/types/anniversary'
+import { useAnniversaryDialog } from '@/composables/useAnniversaryDialog'
 
 const props = defineProps<{ widget: Widget }>()
 
-const config = computed(() => ({
-  startDate: (props.widget.config.startDate as string) ?? '1997-10-01',
-  title: (props.widget.config.title as string) ?? '你在世界已经',
-}))
+const { openDialog } = useAnniversaryDialog()
+
+const config = computed<AnniversaryConfig>(() => {
+  return props.widget.data?.config || DEFAULT_ANNIVERSARY_CONFIG
+})
+
+// 点击打开配置对话框
+function handleClick() {
+  openDialog(props.widget.id)
+}
 
 // 每天刷新一次（跨零点更新天数）
 const today = ref(dayjs())
@@ -31,7 +40,7 @@ const formattedDays = computed(() => days.value.toLocaleString('zh-CN'))
 </script>
 
 <template>
-  <div class="w-full h-full glass-card p-3 flex flex-col select-none text-gray-800 dark:text-white">
+  <div class="w-full h-full glass-card p-3 flex flex-col select-none text-gray-800 dark:text-white cursor-pointer hover:scale-105 transition-transform" @click="handleClick">
 
     <!-- 标题 -->
     <div class="text-gray-600 dark:text-gray-300 text-xs leading-tight">{{ config.title }}</div>

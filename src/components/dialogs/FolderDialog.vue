@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, watch, ref } from 'vue'
-import { Icon } from '@iconify/vue'
 import DialogTitleBar from '@/components/common/DialogTitleBar.vue'
 import { useSettingsStore } from '@/stores/settings'
 import type { SiteIcon } from '@/types/icon'

@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from './App.vue'
 import './styles/index.css'
+import './styles/glass.css'
 
 // ===== 数据版本迁移 =====
 // 每次修改 store 数据结构时，递增此版本号并在下方添加迁移逻辑

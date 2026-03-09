@@ -12,7 +12,7 @@ const props = defineProps<{ widget: Widget }>()
 const { openDialog } = useWeatherDetailDialog()
 
 const config = computed<WeatherConfig>(() => {
-  return props.widget.data?.config || DEFAULT_WEATHER_CONFIG
+  return { ...DEFAULT_WEATHER_CONFIG, ...(props.widget.config as Partial<WeatherConfig> || {}) }
 })
 
 const cityRef = () => config.value.city

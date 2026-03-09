@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
+import DialogTitleBar from '@/components/common/DialogTitleBar.vue'
 import { useIconsStore } from '@/stores/icons'
 import { fetchSiteInfo } from '@/services/api'
 import { PRESET_COLORS } from '@/utils/color'
@@ -61,7 +62,7 @@ async function fetchInfo() {
       if (res.data.name) form.value.name = res.data.name
       const iconUrl = res.data.imgSrc || res.data.src || ''
       if (iconUrl) { form.value.icon = iconUrl; form.value.source = 'url' }
-      if (res.data.backgroundColor) form.value.bgColor = res.data.backgroundColor
+      if (res.data.backgroundColor !== undefined) form.value.bgColor = res.data.backgroundColor
     }
   } catch { /* 获取失败静默处理 */ }
   fetching.value = false
@@ -76,7 +77,7 @@ async function forceRefresh() {
       if (res.data.name) form.value.name = res.data.name
       const iconUrl = res.data.imgSrc || res.data.src || ''
       if (iconUrl) { form.value.icon = iconUrl; form.value.source = 'url' }
-      if (res.data.backgroundColor) form.value.bgColor = res.data.backgroundColor
+      if (res.data.backgroundColor !== undefined) form.value.bgColor = res.data.backgroundColor
       ElMessage.success('图标已更新')
     } else {
       ElMessage.warning('未获取到新数据')
@@ -153,18 +154,9 @@ const previewText = computed(() => {
         <div class="absolute inset-0 bg-black/40" @click="emit('update:visible', false)" />
 
         <!-- 弹窗主体 -->
-        <div class="relative glass-dialog rounded-2xl overflow-hidden" style="width: 460px;">
+        <div class="relative glass-dialog rounded-[20px] overflow-hidden pt-[48px]" style="width: 460px;">
           <!-- 标题栏 -->
-          <div class="flex items-center justify-between px-5 py-3.5 border-b border-black/8">
-            <h2 class="text-gray-800 font-medium text-sm">编辑图标</h2>
-            <button
-              type="button"
-              class="text-gray-400 hover:text-gray-700 transition-colors"
-              @click="emit('update:visible', false)"
-            >
-              <Icon icon="mdi:close" class="w-5 h-5" />
-            </button>
-          </div>
+          <DialogTitleBar title="编辑图标" fixed @close="emit('update:visible', false)" />
 
           <!-- 内容区 -->
           <div class="p-5 flex gap-5">
@@ -178,7 +170,8 @@ const previewText = computed(() => {
                 <img
                   v-if="form.source !== 'text' && form.icon"
                   :src="form.icon"
-                  class="w-10 h-10 object-contain"
+                  class="w-full h-full"
+                  :style="{ objectFit: form.bgColor ? 'contain' : 'cover' }"
                   @error="form.icon = ''"
                 />
                 <span v-else class="text-white text-lg font-medium select-none">

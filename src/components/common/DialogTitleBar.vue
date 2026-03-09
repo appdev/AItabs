@@ -18,11 +18,11 @@ const emit = defineEmits<{
 <template>
   <div
     class="dialog-title-bar flex items-center justify-between z-10 border-b border-black/8 dark:border-white/10"
-    :class="fixed ? 'absolute top-0 left-0 right-0 h-12 px-4' : 'px-6 py-3'"
+    :class="fixed ? 'absolute top-0 left-0 right-0 h-12 px-4' : 'h-12 px-6'"
   >
     <!-- 标题区域 - 支持插槽或直接传入标题 -->
     <slot name="title">
-      <h2 v-if="title" class="font-bold text-gray-800 dark:text-white" :class="fixed ? 'text-lg' : 'text-base font-medium'">
+      <h2 v-if="title" class="font-bold text-gray-800 dark:text-white text-sm">
         {{ title }}
       </h2>
       <div v-else />

@@ -11,7 +11,7 @@ const props = defineProps<{ widget: Widget }>()
 const { openDialog } = useAnniversaryDialog()
 
 const config = computed<AnniversaryConfig>(() => {
-  return props.widget.data?.config || DEFAULT_ANNIVERSARY_CONFIG
+  return { ...DEFAULT_ANNIVERSARY_CONFIG, ...(props.widget.config as Partial<AnniversaryConfig> || {}) }
 })
 
 // 点击打开配置对话框

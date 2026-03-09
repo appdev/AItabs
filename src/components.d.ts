@@ -19,7 +19,6 @@ declare module 'vue' {
     ContextMenu: typeof import('./components/contextmenu/ContextMenu.vue')['default']
     CountdownConfigDialog: typeof import('./components/dialogs/CountdownConfigDialog.vue')['default']
     CountdownWidget: typeof import('./components/widgets/CountdownWidget.vue')['default']
-    DialogHeader: typeof import('./components/common/DialogHeader.vue')['default']
     DialogTitleBar: typeof import('./components/common/DialogTitleBar.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElInput: typeof import('element-plus/es')['ElInput']
@@ -50,7 +49,6 @@ declare module 'vue' {
     WeatherConfigDialog: typeof import('./components/dialogs/WeatherConfigDialog.vue')['default']
     WeatherDetailDialog: typeof import('./components/dialogs/WeatherDetailDialog.vue')['default']
     WeatherWidget: typeof import('./components/widgets/WeatherWidget.vue')['default']
-    WidgetConfigDialog: typeof import('./components/dialogs/WidgetConfigDialog.vue')['default']
     WidgetWrapper: typeof import('./components/widgets/WidgetWrapper.vue')['default']
   }
 }

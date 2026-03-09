@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Icon } from '@iconify/vue'
 import { useTodosStore } from '@/stores/todos'
 import { useTodoDialog } from '@/composables/useTodoDialog'
 import type { Widget } from '@/types/widget'

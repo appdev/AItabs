@@ -108,5 +108,5 @@ export function useClock() {
     if (timer) clearInterval(timer)
   })
 
-  return { hours, minutes, seconds, dateStr, weekStr, lunarStr, fullDateStr }
+  return { hours, minutes, seconds, dateStr, weekStr, lunarStr, fullDateStr, getLunarDate: solarToLunar }
 }

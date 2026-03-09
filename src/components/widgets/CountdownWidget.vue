@@ -13,7 +13,15 @@ const props = defineProps<{
 const { openDialog } = useCountdownDialog()
 
 const config = computed<CountdownConfig>(() => {
-  return props.widget.data?.config || DEFAULT_COUNTDOWN_CONFIG
+  const custom = props.widget.config as Partial<CountdownConfig> || {}
+  return {
+    ...DEFAULT_COUNTDOWN_CONFIG,
+    ...custom,
+    display: {
+      ...DEFAULT_COUNTDOWN_CONFIG.display,
+      ...(custom.display || {})
+    }
+  }
 })
 
 // 点击打开配置对话框

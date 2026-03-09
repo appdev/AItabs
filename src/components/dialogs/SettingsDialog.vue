@@ -242,7 +242,7 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
     <Transition name="settings-slide">
       <div
         v-if="visible"
-        class="settings-panel fixed top-0 right-0 bottom-0 z-[100] flex shadow-2xl"
+        class="settings-panel fixed top-0 right-0 bottom-0 z-[100] flex shadow-2xl rounded-l-[20px] overflow-hidden"
         style="width: 450px;"
       >
         <!-- 左侧菜单导航 -->
@@ -266,10 +266,7 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
         <!-- 右侧内容区 -->
         <div class="flex-1 glass-dialog flex flex-col overflow-hidden">
           <!-- 顶部标题栏 -->
-          <div class="flex items-center justify-between px-4 py-3 border-b border-black/8 dark:border-white/10 flex-shrink-0">
-            <h2 class="text-gray-800 dark:text-white text-sm font-medium">
-              {{ MENUS.find(m => m.key === activeMenu)?.label }}
-            </h2>
+          <div class="flex items-center justify-end h-12 px-6 border-b border-black/8 dark:border-white/10 flex-shrink-0">
             <button
               type="button"
               class="text-gray-500 hover:text-gray-900 dark:text-white/60 dark:hover:text-white transition-colors"

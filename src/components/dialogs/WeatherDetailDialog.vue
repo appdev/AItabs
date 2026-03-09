@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import DialogTitleBar from '@/components/common/DialogTitleBar.vue'
 import { useWeatherDetailDialog } from '@/composables/useWeatherDetailDialog'
@@ -11,10 +11,10 @@ const widgetsStore = useWidgetsStore()
 
 // 获取天气数据
 const widget = computed(() => widgetsStore.widgets.find(w => w.id === widgetId.value))
-const cityRef = () => widget.value?.data?.config?.city || ''
-const unitRef = () => widget.value?.data?.config?.unit || 'celsius'
+const cityRef = () => (widget.value?.config as any)?.city || ''
+const unitRef = () => (widget.value?.config as any)?.unit || 'celsius'
 
-const { city, temp, desc, high, low, aqi, weatherIcon, loading } = useWeather({ cityRef, unitRef })
+const { city, temp, desc, high, low, aqi, loading } = useWeather({ cityRef, unitRef })
 
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') closeDialog()
@@ -26,16 +26,9 @@ function handleKeydown(e: KeyboardEvent) {
     <Transition name="dialog">
       <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="closeDialog" @keydown="handleKeydown">
         <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="closeDialog" />
-        <div class="relative w-full max-w-2xl glass-dialog rounded-2xl shadow-2xl overflow-hidden">
+        <div class="relative w-full max-w-2xl glass-dialog rounded-[20px] shadow-2xl overflow-hidden pt-[48px]">
           <!-- 统一的头部 -->
-          <DialogTitleBar @close="closeDialog">
-            <template #title>
-              <div class="flex items-center gap-2">
-                <Icon :icon="weatherIcon" class="w-5 h-5" />
-                <span class="text-base font-medium text-gray-800 dark:text-white">{{ city }} · {{ desc }}</span>
-              </div>
-            </template>
-          </DialogTitleBar>
+          <DialogTitleBar title="天气" fixed @close="closeDialog" />
 
           <!-- 内容区域 -->
           <div v-if="loading" class="p-12 flex items-center justify-center">
@@ -45,6 +38,7 @@ function handleKeydown(e: KeyboardEvent) {
             <!-- 当前天气 -->
             <div class="flex items-center justify-between">
               <div>
+                <div class="text-2xl font-medium text-gray-800 dark:text-white mb-2">{{ city }}</div>
                 <div class="text-6xl font-light text-gray-800 dark:text-gray-100">{{ temp }}°</div>
                 <div class="text-sm text-gray-600 dark:text-gray-400 mt-2">{{ desc }}</div>
               </div>

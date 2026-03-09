@@ -10,7 +10,7 @@ const props = defineProps<{ widget: Widget }>()
 const { openDialog } = useMemoDialog()
 
 const memoData = computed(() => {
-  return props.widget.data as MemoData | undefined
+  return props.widget.config as MemoData | undefined
 })
 
 const recentMemos = computed(() => {

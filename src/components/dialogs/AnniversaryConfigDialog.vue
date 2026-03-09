@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Icon } from '@iconify/vue'
 import DialogTitleBar from '@/components/common/DialogTitleBar.vue'
 import { useAnniversaryDialog } from '@/composables/useAnniversaryDialog'
 import { useWidgetsStore } from '@/stores/widgets'
@@ -17,8 +16,8 @@ const editConfig = ref<AnniversaryConfig>(JSON.parse(JSON.stringify(DEFAULT_ANNI
 watch(widgetId, (id) => {
   if (id) {
     const widget = widgetsStore.widgets.find(w => w.id === id)
-    if (widget?.data?.config) {
-      editConfig.value = JSON.parse(JSON.stringify(widget.data.config))
+    if (widget?.config) {
+      editConfig.value = JSON.parse(JSON.stringify(widget.config))
     } else {
       editConfig.value = JSON.parse(JSON.stringify(DEFAULT_ANNIVERSARY_CONFIG))
     }
@@ -32,9 +31,7 @@ function saveConfig() {
   const widget = widgetsStore.widgets.find(w => w.id === widgetId.value)
   if (widget) {
     widgetsStore.updateWidget(widgetId.value, {
-      data: {
-        config: editConfig.value,
-      },
+      config: editConfig.value,
     })
   }
 
@@ -62,9 +59,9 @@ function handleKeydown(e: KeyboardEvent) {
         <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="closeDialog" />
 
         <!-- 对话框 -->
-        <div class="relative w-full max-w-md glass-dialog rounded-2xl shadow-2xl overflow-hidden">
+        <div class="relative w-full max-w-md glass-dialog rounded-[20px] shadow-2xl overflow-hidden pt-[48px]">
           <!-- 统一的头部 -->
-          <DialogTitleBar title="纪念日设置" @close="closeDialog" />
+          <DialogTitleBar title="纪念日设置" fixed @close="closeDialog" />
 
           <!-- 内容区域 -->
           <div class="p-6 space-y-6">

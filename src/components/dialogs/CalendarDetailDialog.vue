@@ -106,9 +106,9 @@ function isCurrentMonth(day: Dayjs) {
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
         @click.self="closeDialog"
       >
-        <div class="glass-dialog w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="glass-dialog w-full max-w-4xl max-h-[90vh] rounded-[20px] overflow-hidden flex flex-col pt-[48px]">
           <!-- 统一的头部 -->
-          <DialogTitleBar title="日历" @close="closeDialog" />
+          <DialogTitleBar title="日历" fixed @close="closeDialog" />
 
           <!-- 内容区域 -->
           <div class="flex-1 overflow-y-auto p-6">

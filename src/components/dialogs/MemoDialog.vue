@@ -19,7 +19,7 @@ const widget = computed(() => {
 })
 
 const memoData = computed(() => {
-  return widget.value?.data as MemoData | undefined
+  return widget.value?.config as MemoData | undefined
 })
 
 const memos = computed(() => {
@@ -28,7 +28,7 @@ const memos = computed(() => {
 
 const selectedMemo = computed(() => {
   if (!selectedMemoId.value && memos.value.length > 0) {
-    selectedMemoId.value = memos.value[0].id
+    selectedMemoId.value = memos.value[0]!.id
   }
   return memos.value.find(m => m.id === selectedMemoId.value)
 })
@@ -46,8 +46,9 @@ const filteredMemos = computed(() => {
 // 监听 widget 变化，初始化选中的备忘录和默认数据
 watch(() => widgetId.value, (newId) => {
   if (newId) {
-    // 如果没有备忘录数据，初始化一个默认备忘录
-    if (!memoData.value || memos.value.length === 0) {
+    // 如果没有配置数据或且没有备忘录数组（例如刚创建组件时），初始化一个默认备忘录
+    // 如果存在备忘录配置但数据为空（用户手动删除全部），则不再自动创建
+    if (!memoData.value || !memoData.value.memos) {
       const defaultMemo: Memo = {
         id: generateId(),
         title: 'AItabs 使用技巧',
@@ -101,11 +102,6 @@ function addMemo() {
 function deleteMemo() {
   if (!selectedMemo.value) return
 
-  if (memos.value.length === 1) {
-    alert('至少保留一个备忘录')
-    return
-  }
-
   if (!confirm(`确定要删除备忘录"${selectedMemo.value.title}"吗？`)) {
     return
   }
@@ -146,7 +142,7 @@ function updateData(updates: Partial<MemoData>) {
 
   const currentData = memoData.value || { memos: [], updatedAt: Date.now() }
   widgetsStore.updateWidget(widget.value.id, {
-    data: {
+    config: {
       ...currentData,
       ...updates,
       updatedAt: Date.now(),
@@ -175,11 +171,11 @@ function formatFullTime(timestamp: number) {
         <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="closeDialog" />
 
         <!-- 对话框主体 -->
-        <div class="relative w-[900px] h-[650px] rounded-[20px] overflow-hidden glass-dialog">
+        <div class="relative w-[900px] h-[650px] rounded-[20px] overflow-hidden glass-dialog pt-[48px]">
           <!-- 顶部工具栏 -->
           <DialogTitleBar title="备忘录" fixed @close="closeDialog" />
 
-          <div class="flex h-full pt-12">
+          <div class="flex h-full">
             <!-- 左侧备忘录列表 -->
             <div class="memo-sidebar w-64 border-r border-black/8 dark:border-white/5 flex flex-col">
               <!-- 搜索框 -->

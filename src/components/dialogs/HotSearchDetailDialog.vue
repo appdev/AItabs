@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Icon } from '@iconify/vue'
 import DialogTitleBar from '@/components/common/DialogTitleBar.vue'
 import { useHotSearchDetailDialog } from '@/composables/useHotSearchDetailDialog'
 
@@ -116,9 +115,9 @@ function handleClick(title: string) {
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
         @click.self="closeDialog"
       >
-        <div class="glass-dialog w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="glass-dialog w-full max-w-2xl max-h-[90vh] rounded-[20px] overflow-hidden flex flex-col pt-[48px]">
           <!-- 统一的头部 -->
-          <DialogTitleBar title="热搜榜" @close="closeDialog" />
+          <DialogTitleBar title="热搜榜" fixed @close="closeDialog" />
 
           <!-- 数据源标签 -->
           <div class="flex items-center gap-2 px-6 py-3 border-b border-white/10">

@@ -261,7 +261,7 @@ async function fetchIcon() {
     if (res.data) {
       customForm.value.name = res.data.name || ''
       customForm.value.icon = res.data.imgSrc || res.data.src || ''
-      customForm.value.bgColor = res.data.backgroundColor || '#0984fe'
+      customForm.value.bgColor = res.data.backgroundColor ?? '#0984fe'
     } else {
       ElMessage.warning('未能获取网站信息，请手动填写')
     }
@@ -348,10 +348,12 @@ function saveAndContinue() {
         <div class="absolute inset-0 bg-black/40" @click="emit('update:visible', false)" />
 
         <!-- 弹窗主体 -->
-        <div
-          class="relative glass-dialog rounded-2xl overflow-hidden flex"
+        <div class="relative glass-dialog rounded-[20px] overflow-hidden flex pt-[48px]"
           style="width: 80vw; max-width: 960px; height: 70vh;"
         >
+          <!-- 顶部标题栏 -->
+          <DialogTitleBar :title="editIconId && currentTab === 'custom' ? '编辑图标' : TABS.find(t => t.key === currentTab)?.label" fixed @close="emit('update:visible', false)" />
+
           <!-- 左侧 Tab 栏（编辑图标模式下隐藏） -->
           <nav v-if="!editIconId" class="flex flex-col gap-1 p-3 border-r border-black/8 dark:border-white/10 flex-shrink-0" style="width: 120px;">
             <button
@@ -369,20 +371,6 @@ function saveAndContinue() {
 
           <!-- 右侧内容区 -->
           <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- 顶部标题栏 -->
-            <div class="flex items-center justify-between px-5 py-3 border-b border-black/8 dark:border-white/10 flex-shrink-0">
-              <h2 class="text-gray-800 dark:text-white font-medium">
-                {{ editIconId && currentTab === 'custom' ? '编辑图标' : TABS.find(t => t.key === currentTab)?.label }}
-              </h2>
-              <button
-                type="button"
-                class="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-white transition-colors"
-                @click="emit('update:visible', false)"
-              >
-                <Icon icon="mdi:close" class="w-5 h-5" />
-              </button>
-            </div>
-
             <!-- ===== 小组件 Tab ===== -->
             <template v-if="currentTab === 'widget'">
               <!-- 分类筛选 -->
@@ -618,7 +606,7 @@ function saveAndContinue() {
                               :style="{ backgroundColor: customForm.bgColor }"
                               @click="customForm.iconMode = 'image'"
                             >
-                            <img :src="customForm.icon" class="w-full h-full object-cover rounded-[18px]" />
+                            <img :src="customForm.icon" class="w-full h-full rounded-[18px]" :style="{ objectFit: customForm.bgColor ? 'contain' : 'cover' }" />
                             
                             <div v-if="customForm.iconMode === 'image'" class="absolute -bottom-1.5 -right-1.5 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-[2px] border-white dark:border-gray-800 shadow-sm z-10">
                               <Icon icon="mdi:check" class="w-3 h-3 text-white" />
@@ -638,7 +626,7 @@ function saveAndContinue() {
                               :style="{ backgroundColor: uploadPreviewIcon ? customForm.bgColor : '' }"
                               @click="customForm.iconMode = 'upload'"
                             >
-                              <img v-if="uploadPreviewIcon" :src="uploadPreviewIcon" class="w-full h-full object-cover rounded-[18px]" />
+                              <img v-if="uploadPreviewIcon" :src="uploadPreviewIcon" class="w-full h-full rounded-[18px]" :style="{ objectFit: customForm.bgColor ? 'contain' : 'cover' }" />
                               <Icon v-else icon="mdi:plus" class="w-8 h-8 text-gray-400 dark:text-gray-500" />
                               
                               <div v-if="customForm.iconMode === 'upload'" class="absolute -bottom-1.5 -right-1.5 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-[2px] border-white dark:border-gray-800 shadow-sm z-10">

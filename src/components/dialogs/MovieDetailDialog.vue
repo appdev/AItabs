@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import DialogHeader from '@/components/common/DialogHeader.vue'
 import { useMovieDetailDialog } from '@/composables/useMovieDetailDialog'
 
 const { visible, currentMovie, closeDialog } = useMovieDetailDialog()
@@ -14,7 +13,7 @@ const { visible, currentMovie, closeDialog } = useMovieDetailDialog()
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
         @click.self="closeDialog"
       >
-        <div class="glass-dialog rounded-2xl overflow-hidden flex flex-col relative" style="width: 860px; max-height: 90vh; box-shadow: none; border: none; background: transparent">
+        <div class="glass-dialog rounded-[20px] overflow-hidden flex flex-col relative" style="width: 860px; max-height: 90vh; box-shadow: none; border: none; background: transparent">
           <!-- 背景海报（模糊） -->
           <div
             class="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -25,10 +24,13 @@ const { visible, currentMovie, closeDialog } = useMovieDetailDialog()
             }"
           />
 
-          <!-- 统一的头部 -->
-          <div class="relative z-10">
-            <DialogHeader @close="closeDialog" />
-          </div>
+          <!-- 关闭按钮 -->
+          <button
+            class="absolute top-4 right-4 z-20 w-8 h-8 rounded-lg flex items-center justify-center bg-black/20 hover:bg-black/40 text-white/70 hover:text-white transition-colors"
+            @click="closeDialog"
+          >
+            <Icon icon="mdi:close" class="text-xl" />
+          </button>
 
           <!-- 内容区域 -->
           <div class="relative z-10 flex-1 overflow-y-auto" style="padding: 50px">

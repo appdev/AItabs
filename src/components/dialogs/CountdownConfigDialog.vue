@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { Icon } from '@iconify/vue'
+import { ref, watch } from 'vue'
 import DialogTitleBar from '@/components/common/DialogTitleBar.vue'
 import { useCountdownDialog } from '@/composables/useCountdownDialog'
 import { useWidgetsStore } from '@/stores/widgets'
@@ -17,8 +16,16 @@ const editConfig = ref<CountdownConfig>(JSON.parse(JSON.stringify(DEFAULT_COUNTD
 watch(widgetId, (id) => {
   if (id) {
     const widget = widgetsStore.widgets.find(w => w.id === id)
-    if (widget?.data?.config) {
-      editConfig.value = JSON.parse(JSON.stringify(widget.data.config))
+    if (widget?.config) {
+      const wConfig = widget.config as Partial<CountdownConfig>
+      editConfig.value = {
+        ...JSON.parse(JSON.stringify(DEFAULT_COUNTDOWN_CONFIG)),
+        ...JSON.parse(JSON.stringify(wConfig)),
+        display: {
+          ...DEFAULT_COUNTDOWN_CONFIG.display,
+          ...(wConfig.display ? JSON.parse(JSON.stringify(wConfig.display)) : {})
+        }
+      }
       // 确保 holiday 字段存在
       if (!editConfig.value.holiday) {
         editConfig.value.holiday = { name: '', date: '' }
@@ -36,9 +43,7 @@ function saveConfig() {
   const widget = widgetsStore.widgets.find(w => w.id === widgetId.value)
   if (widget) {
     widgetsStore.updateWidget(widgetId.value, {
-      data: {
-        config: editConfig.value,
-      },
+      config: editConfig.value,
     })
   }
 
@@ -66,9 +71,9 @@ function handleKeydown(e: KeyboardEvent) {
         <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="closeDialog" />
 
         <!-- 对话框 -->
-        <div class="relative w-full max-w-md glass-dialog rounded-2xl shadow-2xl overflow-hidden">
+        <div class="relative w-full max-w-md glass-dialog rounded-[20px] shadow-2xl overflow-hidden pt-[48px]">
           <!-- 统一的头部 -->
-          <DialogTitleBar title="倒计时设置" @close="closeDialog" />
+          <DialogTitleBar title="倒计时设置" fixed @close="closeDialog" />
 
           <!-- 内容区域 -->
           <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">

@@ -111,7 +111,8 @@ function handleDelete(e: MouseEvent) {
           v-if="icon.icon && !icon.iconText"
           :src="icon.icon"
           :alt="icon.name"
-          class="w-full h-full object-cover"
+          class="w-full h-full"
+          :style="{ objectFit: icon.bgColor ? 'contain' : 'cover' }"
         />
         <span
           v-else

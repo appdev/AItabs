@@ -18,7 +18,6 @@ const showCalendar = ref(false) // 日历弹窗显示状态
 const selectedMonth = ref(dayjs())
 const selectedDate = ref(dayjs()) // 当前选择的日期，默认今天
 const showSettingsMenu = ref(false) // 显示设置菜单
-const calendarButtonRef = ref<HTMLElement>() // 日历按钮引用
 
 // 当前视图的待办
 const currentTodos = computed(() => {
@@ -56,14 +55,6 @@ function selectList(listId: string) {
   // 如果不是今天列表，切换时重置选中日期为今天
   if (listId !== 'today') {
     selectedDate.value = dayjs()
-  }
-}
-
-// 新建列表
-function createNewList() {
-  const name = prompt('请输入列表名称')
-  if (name) {
-    todosStore.addList(name)
   }
 }
 
@@ -149,18 +140,11 @@ function isOverdue(dueDate?: string) {
         <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="closeDialog(); showCalendar = false; showSettingsMenu = false" />
 
         <!-- 对话框主体 -->
-        <div class="relative w-[1000px] h-[602px] rounded-[20px] overflow-hidden glass-dialog">
+        <div class="relative w-[1000px] h-[602px] rounded-[20px] overflow-hidden glass-dialog pt-[48px]">
           <!-- 顶部工具栏 -->
-          <DialogTitleBar fixed @close="closeDialog">
-            <template #actions>
-              <div class="w-3 h-3 rounded-full bg-[#28C840]" />
-            </template>
-            <template #close>
-              <div class="w-3 h-3 rounded-full bg-[#FF5F57] cursor-pointer hover:bg-[#FF5F57]/80 transition-colors" @click="closeDialog" />
-            </template>
-          </DialogTitleBar>
+          <DialogTitleBar title="待办事项" fixed @close="closeDialog" />
 
-          <div class="flex h-full pt-12" @click="showCalendar = false">
+          <div class="flex h-full" @click="showCalendar = false">
             <!-- 左侧边栏 -->
             <div class="todo-sidebar w-56 border-r border-black/8 dark:border-white/5 flex flex-col">
               <!-- 搜索框 -->

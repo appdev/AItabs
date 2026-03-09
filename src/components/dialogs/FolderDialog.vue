@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watch, ref } from 'vue'
 import { Icon } from '@iconify/vue'
+import DialogTitleBar from '@/components/common/DialogTitleBar.vue'
 import { useSettingsStore } from '@/stores/settings'
 import type { SiteIcon } from '@/types/icon'
 
@@ -63,21 +64,12 @@ const hasChildren = computed(() => (props.icon.children?.length ?? 0) > 0)
 
         <!-- Popover 主体 -->
         <div
-          class="absolute glass-card rounded-2xl p-4 shadow-2xl"
+          class="absolute glass-card rounded-[20px] p-4 shadow-2xl pt-[48px]"
           :style="popoverStyle"
           @click.stop
         >
           <!-- 标题栏 -->
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-gray-800 font-medium text-sm">{{ icon.name }}</h3>
-            <button
-              type="button"
-              class="text-gray-400 hover:text-gray-700 transition-colors"
-              @click="emit('update:visible', false)"
-            >
-              <Icon icon="mdi:close" class="w-4 h-4" />
-            </button>
-          </div>
+          <DialogTitleBar :title="icon.name" fixed @close="emit('update:visible', false)" />
 
           <!-- 子图标网格 -->
           <div v-if="hasChildren" class="grid grid-cols-4 gap-3">

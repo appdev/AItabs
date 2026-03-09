@@ -27,7 +27,7 @@ async function fetchBingUrl(): Promise<string> {
     const data = await res.json()
     const rawUrl: string = data.images?.[0]?.url ?? ''
     if (rawUrl) {
-      const url = 'https://cn.bing.com' + rawUrl.split('&')[0]
+      const url = 'https://bing.com' + rawUrl.split('&')[0]
       localStorage.setItem(BING_CACHE_KEY, JSON.stringify({ url, date: today }))
       return url
     }

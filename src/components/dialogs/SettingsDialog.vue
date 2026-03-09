@@ -524,9 +524,9 @@ const TIME_COLORS = ['#ffffff', '#f5f5f5', '#FFE4C4', '#FFD700', '#87CEEB', '#98
               <div class="py-2 border-b border-black/5 dark:border-white/8">
                 <span class="text-gray-600 dark:text-gray-300 text-xs block mb-2">壁纸来源</span>
                 <div class="s-btngroup w-full">
-                  <button class="flex-1" :class="{ active: settings.wallpaper.type === 'default' }" @click="settings.wallpaper.type = 'default'; settings.wallpaper.src = 'https://files.codelife.cc/itab/defaultWallpaper/defaultWallpaper.webp'">默认</button>
+                  <button class="flex-1" :class="{ active: settings.wallpaper.type === 'default' }" @click="settings.wallpaper.type = 'default'; settings.wallpaper.src = '/bg.webp'">默认</button>
                   <button class="flex-1" :class="{ active: settings.wallpaper.type === 'bing' }" @click="settings.wallpaper.type = 'bing'">Bing 每日</button>
-                  <button class="flex-1" :class="{ active: settings.wallpaper.type === 'url' }" @click="settings.wallpaper.type = 'url'">URL</button>
+                  <button class="flex-1" :class="{ active: settings.wallpaper.type === 'url' }" @click="settings.wallpaper.type = 'url'; if (!settings.wallpaper.src || settings.wallpaper.src === '/bg.webp') settings.wallpaper.src = 'https://cn.bing.com/th?id=OHR.GoremeTwilight_EN-US3224835148_UHD.jpg&pid=hp&w=1920'">URL</button>
                   <button class="flex-1" :class="{ active: settings.wallpaper.type === 'local' }" @click="uploadWallpaper">本地</button>
                 </div>
                 <ElInput

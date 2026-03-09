@@ -29,7 +29,7 @@ export default defineConfig({
         runtimeCaching: [
           {
             // Bing 每日壁纸图片：缓存优先，每天刷新
-            urlPattern: /^https:\/\/cn\.bing\.com\//i,
+            urlPattern: /^https:\/\/(cn\.)?bing\.com\//i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'bing-wallpaper',
@@ -90,7 +90,7 @@ export default defineConfig({
         },
       },
       '/bing-wallpaper': {
-        target: 'https://cn.bing.com',
+        target: 'https://bing.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/bing-wallpaper/, ''),
       },

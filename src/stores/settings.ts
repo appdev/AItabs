@@ -29,7 +29,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     mask: 0,
     blur: 0,
     type: 'default',
-    src: 'https://files.codelife.cc/itab/defaultWallpaper/defaultWallpaper.webp',
+    src: '/bg.webp',
     thumb: '',
   },
   time: {
